@@ -1,2 +1,2 @@
-# 2017Robot
-The 2017 robot code
+THICC READ ME FILE
+Thx
