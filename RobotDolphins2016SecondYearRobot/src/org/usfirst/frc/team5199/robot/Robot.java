@@ -16,16 +16,11 @@ import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
-import com.ni.vision.NIVision;
-import com.ni.vision.NIVision.DrawMode;
-import com.ni.vision.NIVision.Image;
-import com.ni.vision.NIVision.ShapeMode;
 
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.AnalogGyro;
-import edu.wpi.first.wpilibj.CANTalon;
-import edu.wpi.first.wpilibj.CANTalon.FeedbackDevice;
-import edu.wpi.first.wpilibj.CANTalon.TalonControlMode;
+import edu.wpi.first.wpilibj.Talon;
+
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.DigitalInput;
@@ -45,7 +40,6 @@ import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.Victor;
 import edu.wpi.first.wpilibj.interfaces.Gyro;
 import edu.wpi.first.wpilibj.smartdashboard.*;
-import edu.wpi.first.wpilibj.vision.AxisCamera;
 
 /**
  * This is a demo program showing how to use Mecanum control with the RobotDrive class.
@@ -54,7 +48,7 @@ import edu.wpi.first.wpilibj.vision.AxisCamera;
 public class Robot extends SampleRobot {
 	NewPixy pixyCam = new NewPixy(); // Pixy.java is Kevin's, NewPixy.java is Kyle's.
 	PowerDistributionPanel pdp;
-	CANTalon talon;
+	Talon talon;
 	DoubleSolenoid piston0;
 	DoubleSolenoid piston1;
 	Solenoid cylinder1,cylinder2,cylinder4,cylinder5;
@@ -63,7 +57,7 @@ public class Robot extends SampleRobot {
 	double leftrange, rightrange;
 	DigitalInput HallEffectTest;
 	// TODO New Code
-	CANTalon ballMotor, testarino;
+	Talon ballMotor, testarino;
 	Solenoid cylinder3;
 	ADXRS450_Gyro gyro;
 	long millis, millis2, timePassed, millis3; 
@@ -76,8 +70,6 @@ public class Robot extends SampleRobot {
 	Compressor compressor;
 	Talon leftMotors, rightMotors, frontRight, frontLeft, backRight, backLeft, Right, Left;
 	Victor port4;
-	Image frame;
-	AxisCamera camera;
 	Servo servo1,servo2;
 	BufferedImage blue = null;
 	BufferedImage red = null;
@@ -118,10 +110,6 @@ public class Robot extends SampleRobot {
 		
 		
 		firstRunThroughTeleop = true;
-		
-		server = CameraServer.getInstance();
-		server.setQuality(25);
-		server.startAutomaticCapture("cam1");
 
 
 		int camUp = 90, CamX = 90;
@@ -135,7 +123,7 @@ public class Robot extends SampleRobot {
 		auto_counter = 0;
 
 		board = new SmartDashboard();
-		//talon = new CANTalon(1);
+		//talon = new Talon(1);
 		//port4 = new Victor(4);
 		//Right = new Talon(1);
 		//Left = new Talon(0);
@@ -190,7 +178,7 @@ public class Robot extends SampleRobot {
 	
 		pdp = new PowerDistributionPanel();
 		
-		testarino = new CANTalon(1);
+		testarino = new Talon(1);
 //		testarino.changeControlMode(TalonControlMode.Speed);
 //		testarino.setFeedbackDevice(FeedbackDevice.CtreMagEncoder_Relative);
 //		testarino.setF(0.04833);
@@ -275,9 +263,9 @@ public class Robot extends SampleRobot {
 			leftrange = leftultra.getRangeInches();
 			rightrange = rightultra.getRangeInches();
 			timePassed = System.currentTimeMillis()-millis2;
-			SendableChooser chooser = new SendableChooser();
-		    chooser.addDefault("Command 1", 1);
-		    chooser.addObject("Command 2", 2);
+			//SendableChooser chooser = new SendableChooser();
+		    //chooser.addDefault("Command 1", 1);
+		    //chooser.addObject("Command 2", 2);
 			if(timePassed/1000>119&&timePassed/1000<129){
 				
 			

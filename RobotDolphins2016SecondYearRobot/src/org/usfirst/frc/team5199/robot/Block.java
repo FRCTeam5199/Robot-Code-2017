@@ -3,9 +3,9 @@ package org.usfirst.frc.team5199.robot;
 public class Block {
 	
 	// Documentation states that the size of an object block is 13 bytes.
-	static short sizeOfObjectBlock = 14;
+	static short sizeOfBlockObject = 14;
 	
-	short sync;			// Bytes 0..1		0xAA55 or 0xAA56
+	short sync;			// Bytes 0..1		0xAA55 or 0xAA56 to signify ???
 	short checksum;		// Bytes 2..3		Sum of bytes 4..13
 	short signature;	// Bytes 4..5		???
 	short x;			// Bytes 6..7		X Center of Object [0, 320]

@@ -11,14 +11,14 @@ public class NewPixy {
 	
 	public NewPixy() {
 		pixyBus = new I2C(I2C.Port.kOnboard, PIXY_ADDRESS);
-		currentWord = 0x0000;
-		lastWord = 0x0000;
+		currentWord = (short) 0x0000;
+		lastWord = (short) 0x0000;
 	}
 	
 	public boolean isFrameUpdate() {
 		lastWord = currentWord;
 		currentWord = getWord();
-		if((currentWord == 0xAA55 || currentWord == 0xAA56) && (lastWord == 0xAA55 || lastWord == 0xAA56)) {
+		if((currentWord == (short) 0xAA55 || currentWord == (short) 0xAA56) && (lastWord == (short) 0xAA55 || lastWord == (short) 0xAA56)) {
 			return true;
 		} else {
 			return false;
@@ -38,8 +38,8 @@ public class NewPixy {
 	}
 	
 	public Block getDataBlock() {
-		byte[] buffer = new byte[Block.sizeOfObjectBlock];
-		pixyBus.readOnly(buffer, Block.sizeOfObjectBlock);
+		byte[] buffer = new byte[Block.sizeOfBlockObject];
+		pixyBus.readOnly(buffer, Block.sizeOfBlockObject);
 		Block theBlock = new Block();
 		theBlock.sync 		= (short) ((buffer[1] << 8) | (buffer[0]));
 		theBlock.checksum	= (short) ((buffer[3] << 8) | (buffer[2]));
