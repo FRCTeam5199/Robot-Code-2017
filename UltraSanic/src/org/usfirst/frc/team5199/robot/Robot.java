@@ -21,15 +21,10 @@ public class Robot extends SampleRobot {
 
 	
 	//Ultrasonic Sanic = new Ultrasonic(1,1);
-	Ultrasonic ultra = new Ultrasonic(2,3); // creates the ultra object andassigns ultra to be an ultrasonic sensor which uses DigitalOutput 1 for 
-    // the echo pulse and DigitalInput 1 for the trigger pulse
-	SmartDashboard board = new SmartDashboard();
-	final int ultrasonicArraySize =10;
-	Double [] distanceSamples = new Double[ultrasonicArraySize];
-	int counter = 0;
+		UltrasonicData ultra;
 public void robotInit() {
-	ultra.setAutomaticMode(true); // turns on automatic mode
-	SmartDashboard.putNumber("Distance", 0);
+	ultra = new UltrasonicData(4,5,2,3);
+
 }
 
 public void ultrasonicSample() {
@@ -86,32 +81,19 @@ public void ultrasonicSample() {
     /**
      * This function is called periodically during operator control
      */
-    public double average(Double[] distanceSamples2){
-    	double averages =0;
-    	for(double value: distanceSamples2){
-    	averages += value;	
-    	}
-    	return (averages/distanceSamples2.length);
-    }
     
     
 	public void operatorControl() {
+		int numberOfLoops =0;
+		double timeStart =  System.currentTimeMillis();
 	    while (isOperatorControl() && isEnabled()) {
-    	double range = ultra.getRangeInches();
-    	
-    	
-    	if(counter==(ultrasonicArraySize-1)){
-    		distanceSamples[counter]= range;
-    		counter =0;
-    	}else{
-    		distanceSamples[counter]= range;
-    		counter++;
-    	}
-    	SmartDashboard.putNumber("Distance", range);
-    	
-    	
+	    	ultra.distanceRight();
+	    	
+	    	numberOfLoops++;
 	    }
-        Scheduler.getInstance().run();
+	    SmartDashboard.putNumber("Time Elapsed", (System.currentTimeMillis()-timeStart)/1000);
+	    SmartDashboard.putNumber("Number of Loops", numberOfLoops);
+	    
     }
     
     /**
