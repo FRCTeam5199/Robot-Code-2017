@@ -21,4 +21,8 @@ public class robotDrive {
 		rightMotor.set(driveMod * X);
 
 	}
+	public static void stop(){
+		leftMotor.set(0);
+		rightMotor.set(0);
+	}
 }
