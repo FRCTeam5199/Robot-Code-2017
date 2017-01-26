@@ -60,10 +60,10 @@ public class UltrasonicFunctions {
 
 	public static void goBackTooClosePixy() {
 
-		if (ultraData.distanceRight() < tooClosePixy || ultraData.distanceRight() < tooClosePixy) {
+		if (ultraData.distanceLeft() < tooClosePixy || ultraData.distanceLeft() < tooClosePixy) {
 			do {
 				robot.drive(-.35, 0, 1);
-			} while (ultraData.distanceRight() < (tooClosePixy + 4) || ultraData.distanceRight() < (tooClosePixy + 4));
+			} while (ultraData.distanceLeft() < (tooClosePixy + 4) || ultraData.distanceLeft() < (tooClosePixy + 4));
 
 		}
 	}

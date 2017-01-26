@@ -6,26 +6,26 @@ import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class pixyFunctions {
-	Joystick stick;
 	NewPixy pixyCam;
 	UltrasonicFunctions ultraFunctions;
 	Talon rightMotor, leftMotor;
 	robotDrive robotDriver;
-	public static final double distanceOffBuffer =15;
+	Joystick stick;
+	boolean tomare = false;
+	public static final double distanceOffBuffer =2;
 	
 	public pixyFunctions(NewPixy pixy,Talon right,Talon left,UltrasonicFunctions ultra){
 		rightMotor = right;
 		leftMotor = left;
 		robotDriver = new robotDrive(rightMotor, leftMotor);
 		ultraFunctions = ultra;
-		stick = new Joystick(0);
+		stick = new Joystick(1);
 		pixyCam = pixy; 
 		
-		
-;
 	}
 	public void center(){
 		double distanceRight = 0,distanceLeft=0, distanceOff =0;
+		tomare = false;
 		do{
 			if (pixyCam.getStartOfData() == 1) {
 
@@ -64,10 +64,10 @@ public class pixyFunctions {
 					SmartDashboard.putString(sig + " Synced height:", String.valueOf(ourBlock2.getHeight()));
 				}
 			}
-			distanceOff = distanceRight - distanceLeft;
+			distanceOff = distanceRight + distanceLeft-320;
 			if(distanceOff<(-1*distanceOffBuffer)){
 			do{
-				robotDriver.drive(.35,-.2, 1);
+				robotDriver.drive(0,-.15, 1);
 				ultraFunctions.goBackTooClosePixy();
 				if (pixyCam.getStartOfData() == 1) {
 
@@ -106,12 +106,16 @@ public class pixyFunctions {
 						SmartDashboard.putString(sig + " Synced height:", String.valueOf(ourBlock2.getHeight()));
 					}
 				}
-				distanceOff = distanceRight - distanceLeft;
-			}while(distanceOff<(-1*distanceOffBuffer)&&stick.getRawButton(3));
+				distanceOff = distanceRight + distanceLeft-320;
+				if(stick.getRawButton(2) && stick.getRawButton(1)){
+					tomare = true;
+				}
+			}while(distanceOff<(-1*distanceOffBuffer) && tomare == true);
+			
 			}
 			if(distanceOff>distanceOffBuffer){
 				do{
-					robotDriver.drive(.35,.2, 1);
+					robotDriver.drive(0,.15, 1);
 					ultraFunctions.goBackTooClosePixy();
 					if (pixyCam.getStartOfData() == 1) {
 
@@ -150,11 +154,15 @@ public class pixyFunctions {
 							SmartDashboard.putString(sig + " Synced height:", String.valueOf(ourBlock2.getHeight()));
 						}
 					}
-					distanceOff = distanceRight - distanceLeft;
-				}while(distanceOff>distanceOffBuffer&&stick.getRawButton(3));
+					distanceOff = distanceRight + distanceLeft-320;
+					if(stick.getRawButton(2) && stick.getRawButton(1)){
+						tomare = true;
+					}
+				}while(distanceOff>distanceOffBuffer && tomare == true);
 			}
 			//ultraFunctions.pixySelfStraight();
-		}while((distanceOff>distanceOffBuffer||distanceOff<(-1*distanceOffBuffer))&&stick.getRawButton(3));
+		}while((distanceOff>distanceOffBuffer||distanceOff<(-1*distanceOffBuffer)));
+		robotDriver.stop();
 		
 	}
 }

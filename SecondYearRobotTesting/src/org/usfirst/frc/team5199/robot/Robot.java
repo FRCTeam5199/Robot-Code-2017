@@ -40,7 +40,7 @@ public class Robot extends SampleRobot {
 
 		board = new SmartDashboard();
 		pixyFunction = new pixyFunctions(pixyCam, rightMotor, leftMotor, ultraFunctions);
-		stick = new Joystick(0);
+		stick = new Joystick(1);
 		server = CameraServer.getInstance();
 		server.startAutomaticCapture(0);
 	}
@@ -59,55 +59,7 @@ public class Robot extends SampleRobot {
 			// gyro.getAngle();
 			// gyro.rateOfMotion();
 			double distanceRight = 0, distanceLeft = 0, distanceOff = 0;
-			// if (pixyCam.getStartOfData() == 1) {
-			//
-			// short sig;
-			//
-			// byte[] syncedBufferWithoutSync = new byte[12];
-			// syncedBufferWithoutSync = pixyCam.getVariableSizeBuffer(12);
-			// SyncedBlock ourBlock1 = new SyncedBlock(syncedBufferWithoutSync);
-			// sig = ourBlock1.getSignature();
-			// SmartDashboard.putNumber(sig + " Synced Checksum:",
-			// ourBlock1.getChecksum());
-			// // SmartDashboard.putNumber("Synced Signature:",
-			// // ourBlock.getSignature());
-			// distanceRight = ourBlock1.getX();
-			// SmartDashboard.putString(sig + " Synced X:",
-			// String.valueOf(ourBlock1.getX()));
-			// SmartDashboard.putString(sig + " Synced Y:",
-			// String.valueOf(ourBlock1.getY()));
-			// // SmartDashboard.putString("Synced X HEX:",
-			// // SyncedBlock.getHexRepresentation(ourBlock.rawData[4],
-			// // ourBlock.rawData[5]));
-			// // SmartDashboard.putString("Synced Y HEX:",
-			// // SyncedBlock.getHexRepresentation(ourBlock.rawData[6],
-			// // ourBlock.rawData[7]));
-			// SmartDashboard.putString(sig + " Synced Width:",
-			// String.valueOf(ourBlock1.getWidth()));
-			// SmartDashboard.putString(sig + " Synced height:",
-			// String.valueOf(ourBlock1.getHeight()));
-			//
-			// byte[] secondBlockSync = new byte[2];
-			// secondBlockSync = pixyCam.getVariableSizeBuffer(2);
-			// if ((secondBlockSync[0] == (byte) 0x55) && (secondBlockSync[1] ==
-			// (byte) 0xAA)) {
-			// syncedBufferWithoutSync = pixyCam.getVariableSizeBuffer(12);
-			// SyncedBlock ourBlock2 = new SyncedBlock(syncedBufferWithoutSync);
-			// sig = ourBlock2.getSignature();
-			// SmartDashboard.putNumber("DistanceOff ",
-			// (distanceRight-ourBlock2.getX()));
-			// SmartDashboard.putNumber(sig + " Synced Checksum:",
-			// ourBlock2.getChecksum());
-			// SmartDashboard.putString(sig + " Synced X:",
-			// String.valueOf(ourBlock2.getX()));
-			// SmartDashboard.putString(sig + " Synced Y:",
-			// String.valueOf(ourBlock2.getY()));
-			// SmartDashboard.putString(sig + " Synced Width:",
-			// String.valueOf(ourBlock2.getWidth()));
-			// SmartDashboard.putString(sig + " Synced height:",
-			// String.valueOf(ourBlock2.getHeight()));
-			// }
-			// }
+			
 
 			if (count % 100 == 0) {
 				SmartDashboard.putNumber("Count: ", (double) count);
@@ -116,6 +68,9 @@ public class Robot extends SampleRobot {
 			if (stick.getRawButton(2)) {
 				ultraFunctions.driveFowardUntil();
 				//ultraFunctions.selfStraight();
+			}
+			if(stick.getRawButton(5)){
+				pixyFunction.center();
 			}
 
 		
@@ -135,7 +90,7 @@ public class Robot extends SampleRobot {
 				gyro.moveDegrees(90);
 				
 			} 
-				robotDriver.drive(stick.getRawAxis(1), stick.getRawAxis(4), .5);
+				robotDriver.drive(stick.getRawAxis(1), stick.getRawAxis(2), .5);
 				
 		}
 

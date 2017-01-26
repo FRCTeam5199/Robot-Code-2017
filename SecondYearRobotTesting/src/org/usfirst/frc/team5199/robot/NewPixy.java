@@ -68,6 +68,8 @@ public class NewPixy {
 				+ ("Y: " + block.getY() + "\t") + ("Width: " + Block.shortAsHex(block.getWidth()) + "\t")
 				+ ("Height: " + Block.shortAsHex(block.getHeight()) + "\t");
 	}
+	
+
 
 	public int getStartOfData() {
 		byte[] word = new byte[2];
