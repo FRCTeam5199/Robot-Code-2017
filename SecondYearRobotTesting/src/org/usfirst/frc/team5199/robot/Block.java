@@ -17,14 +17,14 @@ public class Block {
 	private short height;		// Bytes 12..13		Height of the Object
 	
 	public Block(byte[] fourteenByteBuffer) {
-		this.rawData = fourteenByteBuffer;
-		this.sync = (short) ((rawData[1] << 8) | (rawData[0]));
-		this.checksum = (short) ((rawData[3] << 8) | (rawData[2]));
-		this.signature = (short) ((rawData[5] << 8) | (rawData[4]));
-		this.x = (short) ((rawData[7] << 8) | (rawData[6]));
-		this.y = (short) ((rawData[9] << 8) | (rawData[8]));
-		this.width = (short) ((rawData[11] << 8) | (rawData[10]));
-		this.height = (short) ((rawData[13] << 8) | (rawData[12]));
+		this.rawData 	= fourteenByteBuffer;
+		this.sync 		= (short) ((rawData[ 1] << 8) | (rawData[ 0]));
+		this.checksum 	= (short) ((rawData[ 3] << 8) | (rawData[ 2]));
+		this.signature 	= (short) ((rawData[ 5] << 8) | (rawData[ 4]));
+		this.x 			= (short) ((rawData[ 7] << 8) | (rawData[ 6]));
+		this.y 			= (short) ((rawData[ 9] << 8) | (rawData[ 8]));
+		this.width 		= (short) ((rawData[11] << 8) | (rawData[10]));
+		this.height 	= (short) ((rawData[13] << 8) | (rawData[12]));
 	}
 	
 	static public String blockAsHexString(Block theBlock) {

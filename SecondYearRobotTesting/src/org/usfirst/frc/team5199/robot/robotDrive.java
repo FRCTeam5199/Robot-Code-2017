@@ -15,6 +15,12 @@ public class robotDrive {
 		leftMotor.set((((Y*-1)* driveMod)+X));
 		rightMotor.set(((Y* driveMod)+X));
 	}
+	
+
+	public static void driveJS(double J1, double J2, double driveMod){
+		leftMotor.set(J1);
+		rightMotor.set(J2);
+	}
 
 	public static void deadTurn(double X, double driveMod) {
 		leftMotor.set(driveMod * (X));
