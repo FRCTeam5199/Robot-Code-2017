@@ -16,16 +16,16 @@ public class SyncedBlock {
 	private short height;		// Bytes 10..11		Height of the Object
 	
 	public SyncedBlock(byte[] twelveByteBuffer) {
-		this.rawData = twelveByteBuffer;
-		this.checksum = (short) ((rawData[1] << 8) | (rawData[0]));
-		this.signature = (short) ((rawData[3] << 8) | (rawData[2]));
-		this.x = concatByteToShort(rawData[4], rawData[5]);
-		this.y = concatByteToShort(rawData[6], rawData[7]);
-		this.width = concatByteToShort(rawData[8], rawData[9]);
-		this.height = concatByteToShort(rawData[10], rawData[11]);
+		this.rawData 	= twelveByteBuffer;
+		this.checksum 	= (short) ((rawData[1] << 8) | (rawData[0]));
+		this.signature 	= (short) ((rawData[3] << 8) | (rawData[2]));
+		this.x 			= byte2Unsigned(rawData[4], rawData[5]);
+		this.y 			= byte2Unsigned(rawData[6], rawData[7]);
+		this.width 		= byte2Unsigned(rawData[8], rawData[9]);
+		this.height 	= byte2Unsigned(rawData[10], rawData[11]);
 	}
 	
-	public short concatByteToShort(byte b1, byte b2) {
+	public short byte2Unsigned(byte b1, byte b2) {
 		return (short) ((b2 << 8) | (b1 & (short)(0x00FF)));
 	}
 	

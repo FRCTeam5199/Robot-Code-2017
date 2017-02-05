@@ -60,7 +60,7 @@ public class UltrasonicFunctions {
 
 	public static void goBackTooClosePixy() {
 
-		if (ultraData.distanceLeft() < tooClosePixy || ultraData.distanceLeft() < tooClosePixy) {
+		if (ultraData.distanceLeft() < tooClosePixy || ultraData.distanceRight() < tooClosePixy) {
 			do {
 				robot.drive(-.35, 0, 1);
 			} while (ultraData.distanceLeft() < (tooClosePixy + 4) || ultraData.distanceLeft() < (tooClosePixy + 4));
@@ -68,19 +68,50 @@ public class UltrasonicFunctions {
 		}
 	}
 
-	public static void driveFowardUntil() {
-		if (ultraData.distanceLeft() > distanceFromPeg) {
-			while (ultraData.distanceLeft() > (distanceFromPeg + 3)) {
+	public static void driveFowardUntil(int distance) {
+		if (ultraData.distanceLeft() > distance) {
+			while (ultraData.distanceLeft() > (distance + 3)) {
 				robot.drive(-.25, 0, 1);
 				
 			}
-			if (ultraData.distanceLeft() < (distanceFromPeg + 3)) {
-				while (ultraData.distanceLeft() > (distanceFromPeg)) {
+			if (ultraData.distanceLeft() < (distance + 3)) {
+				while (ultraData.distanceLeft() > (distance)) {
 					robot.drive(-.15, 0, 1);
 
 				}
 			}
+		}else if(ultraData.distanceLeft() > distance -2){
+			while (ultraData.distanceLeft() > (distance)) {
+				robot.drive(.15, 0, 1);
+
+			}
 		}
 
 	}
-}
+	public static void turnUltra(int degrees){
+		//PRECONDITION: the distance between the ultrasonic sensors must be known
+		int deltaX = 30; //in inches
+		int angleBuffer = 2; //in degrees
+		//if degrees off is negative that means robot is turned right
+		//if degrees off is positive that means robot is turned left
+		double angleOff = Math.atan(ultraData.distanceLeft()/(deltaX))-Math.atan(ultraData.distanceRight()/(deltaX));
+		if(Math.abs(angleOff-degrees)>angleBuffer){
+			if((angleOff-degrees)>0){
+				//turn right
+				do{
+				angleOff = Math.atan(ultraData.distanceLeft()/(deltaX))-Math.atan(ultraData.distanceRight()/(deltaX));
+				robot.drive(0, -.25, 1);
+				}while((angleOff-degrees)>angleBuffer);
+			}else{
+				//turn left
+				do{
+					angleOff = Math.atan(ultraData.distanceLeft()/(deltaX))-Math.atan(ultraData.distanceRight()/(deltaX));
+					robot.drive(0, -.25, 1);
+					}while((angleOff-degrees)<(-1*angleBuffer));
+			}
+		}
+		
+			
+		}
+	}
+
