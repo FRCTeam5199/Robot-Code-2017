@@ -1,6 +1,7 @@
 package org.usfirst.frc.team5199.robot;
 
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.Spark;
 import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.Ultrasonic;
 
@@ -9,31 +10,43 @@ public class UltrasonicFunctions {
 	public static UltrasonicData ultraData;
 	public static Joystick stick;
 	public static final double buffer = .75; // in inches
-	public static final double tooClosePixy = 12; // inches
+	public static final double tooClosePixy = 20; // inches
 	public static final double distanceFromPeg =26; // inches
 
-	public UltrasonicFunctions(UltrasonicData ultraData, Talon right, Talon left) {
-		robot = new RobotDrive(right, left);
+	public UltrasonicFunctions(UltrasonicData ultraData, Spark rightMotor, Spark leftMotor) {
+		robot = new RobotDrive(rightMotor, leftMotor);
 		stick = new Joystick(0);
 		// TODO Auto-generated constructor stub
 	}
 
 	public static void selfStraight() {
 		double seperation = ultraData.distanceRight() - ultraData.distanceLeft();
-
+		do{
 		if (seperation >= buffer) {
 			while (ultraData.distanceRight() - ultraData.distanceLeft() >= buffer && stick.getRawButton(2)) {
-
-				robot.deadTurn(.35, 1);
+				if(seperation>10){
+				robot.deadTurn(.5, 1);
+				}else if(seperation>5){
+					robot.deadTurn(.35, 1);
+				}else{
+					robot.deadTurn(.15, 1);
+				}
 			}
 
 		} else if (seperation <= ((-1) * buffer)) {
 			while (ultraData.distanceLeft() - ultraData.distanceRight() >= buffer && stick.getRawButton(2)) {
-
-				robot.deadTurn(-.35, 1);
+				if(seperation<-10){
+					robot.deadTurn(.5, 1);
+					}else if(seperation<-5){
+						robot.deadTurn(.35, 1);
+					}else{
+						robot.deadTurn(.15, 1);
+					}
 			}
-
 		}
+		 seperation = ultraData.distanceRight() - ultraData.distanceLeft();
+		}while(Math.abs(seperation)>buffer);
+		robot.stop();
 	}
 
 	public static void goBackTooClosePixy() {
@@ -42,7 +55,7 @@ public class UltrasonicFunctions {
 			do {
 				robot.drive(-.35, 0, 1);
 			} while (ultraData.distanceLeft() < (tooClosePixy + 4) || ultraData.distanceLeft() < (tooClosePixy + 4));
-
+			robot.stop();
 		}
 	}
 	public static void swivelForward(double distance){
@@ -75,7 +88,7 @@ public class UltrasonicFunctions {
 				robot.drive(-.25, 0, 1);
 				
 			}
-			if (ultraData.distanceLeft() < (distance + 3)) {
+			if (ultraData.distanceLeft() < (distance + 6)) {
 				while (ultraData.distanceLeft() > (distance)) {
 					robot.drive(-.15, 0, 1);
 
@@ -87,7 +100,10 @@ public class UltrasonicFunctions {
 
 			}
 		}
-
+		robot.stop();
+	}
+	public static double driveFowardGearLoading() {
+		return ultraData.ultraAverage();
 	}
 	public static void turnUltra(int degrees){
 		//PRECONDITION: the distance between the ultrasonic sensors must be known

@@ -2,18 +2,19 @@ package org.usfirst.frc.team5199.robot;
 
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.AnalogGyro;
+import edu.wpi.first.wpilibj.Spark;
 import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class GyroFunctions {
 	public static ADXRS450_Gyro gyro;
 	public static RobotDrive robot;
-	public GyroFunctions( Talon right, Talon left){
+	public GyroFunctions( Spark rightMotor, Spark leftMotor){
 		gyro = new ADXRS450_Gyro();
 		gyro.reset();
 		gyro.calibrate();
 		
-		robot = new RobotDrive(right,left);
+		robot = new RobotDrive(rightMotor,leftMotor);
 		
 	}
 	public static void moveDegrees(double angle){
