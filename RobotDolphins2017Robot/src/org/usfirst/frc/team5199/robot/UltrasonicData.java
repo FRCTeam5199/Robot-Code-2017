@@ -84,5 +84,8 @@ public class UltrasonicData {
 	public static void rightUltraTest(){
 		SmartDashboard.putNumber("Right Ultra", ultraRight.getRangeInches());
 	}
+	public static double ultraAverage(){
+		return (distanceRight()+distanceLeft())/2;
+	}
 }
 

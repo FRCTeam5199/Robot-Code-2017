@@ -164,6 +164,50 @@ public class PixyProcess {
 		return result;
 
 	}
+	public static int distanceBetweenRightAndLeft(){
+		if (pixyCam.getStartOfData() == 1) {
+
+			short sig;
+			int avgX, avgY;
+			byte[] syncedBufferWithoutSync = new byte[26];
+			syncedBufferWithoutSync = pixyCam.getVariableSizeBuffer(26);
+			if (debugLevel == 2) {
+				SmartDashboard.putNumber("Buffer 12", syncedBufferWithoutSync[12]);
+				SmartDashboard.putNumber("Buffer 13", syncedBufferWithoutSync[13]);
+			}
+			if ((syncedBufferWithoutSync[12]) == 85 && (syncedBufferWithoutSync[13] == -86))// Looking
+																							// 0x55
+																							// and
+																							// 0xaa
+			{
+
+				SyncedLongBlock block = new SyncedLongBlock(syncedBufferWithoutSync);
+				return Math.abs(block.getX(0)-block.getX(1));
+			}
+			}else{
+				do{
+					
+				}while(pixyCam.getStartOfData() != 1);
+				short sig;
+				int avgX, avgY;
+				byte[] syncedBufferWithoutSync = new byte[26];
+				syncedBufferWithoutSync = pixyCam.getVariableSizeBuffer(26);
+				if (debugLevel == 2) {
+					SmartDashboard.putNumber("Buffer 12", syncedBufferWithoutSync[12]);
+					SmartDashboard.putNumber("Buffer 13", syncedBufferWithoutSync[13]);
+				}
+				if ((syncedBufferWithoutSync[12]) == 85 && (syncedBufferWithoutSync[13] == -86))// Looking
+																								// 0x55
+																								// and
+																								// 0xaa
+				{
+					SyncedLongBlock block = new SyncedLongBlock(syncedBufferWithoutSync);
+					return Math.abs(block.getX(0)-block.getX(1));
+				}
+			}
+		return 0;
+	}
+	
 
 }
 // SyncedBlock ourBlock1 = new SyncedBlock(syncedBufferWithoutSync);
