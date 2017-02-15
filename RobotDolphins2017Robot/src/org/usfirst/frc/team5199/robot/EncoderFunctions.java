@@ -131,5 +131,13 @@ public class EncoderFunctions {
 		}
 		//turret.set(0);
 	}
+	public static boolean checkLimits(){
+		//TODO determine values for the limits
+		if(Math.abs(encoder.getPosition())>1000000){
+			return true;
+		}else{
+			return false;
+		}
+	}
 
 	}

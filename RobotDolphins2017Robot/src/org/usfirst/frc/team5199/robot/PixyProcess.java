@@ -73,7 +73,11 @@ public class PixyProcess {
 		blockCount = 0;
 		byteCount =0;
 	}
-
+	public static double adjustDataGear(int pixels){
+		//TODO put in exact measurement for inches off the pixy cam is current estimate is 9.5
+		return pixels-((9.5*distanceBetweenRightAndLeft())/7.5);
+		
+	}
 	public static int[] averageData(int mode, boolean displayResults) {
 		// mode = 0: return average x value
 		// mode = 1: return average x and average y

@@ -47,6 +47,8 @@ public class Robot extends IterativeRobot {
 	double strokePos;
 	String autoMode;
 	Compressor compressor;
+	int autoStep;
+	CameraServer server;
 
 	/**
 	 * This function is run when the robot is first started up and should be
@@ -68,56 +70,62 @@ public class Robot extends IterativeRobot {
 		robotDriver = new RobotDrive(rightMotor, leftMotor);
 		stick = new Joystick(RobotMap.joyStickPort);
 		xBox = new Joystick(RobotMap.xBoxPort);
-		// gyro = new GyroFunctions(rightMotor, leftMotor);
+		gyro = new GyroFunctions(rightMotor, leftMotor);
 		pixyGear = new Pixy(RobotMap.pixyGear);
 		pixyShooter = new Pixy(RobotMap.pixyShoot);
 		servo = new Servo(RobotMap.shooterServo);
 		servoDude = new ServoDude(servo);
 		strokePos = 0.0;
+		server = CameraServer.getInstance();
+		server.startAutomaticCapture(0);
+
 		SmartDashboard.putString("Autonomous Mode", "Enter Value");
 		// pixyFunctionsGear = new PixyFunctions(pixyGear, ultraFunctions,
 		// encoder);
 		// TODO change the parameters of the pixyFunctions to give it the
 		// controllers necessary to shoot
 		// pixyFunctionsShooter= new PixyFunctions(pixyShooter);
-		Thread t = new Thread(() -> {
-
-			boolean allowCam1 = false;
-
-			UsbCamera camera1 = CameraServer.getInstance().startAutomaticCapture(0);
-			camera1.setResolution(320, 240);
-			camera1.setFPS(30);
-			UsbCamera camera2 = CameraServer.getInstance().startAutomaticCapture(1);
-			camera2.setResolution(320, 240);
-			camera2.setFPS(30);
-
-			CvSink cvSink1 = CameraServer.getInstance().getVideo(camera1);
-			CvSink cvSink2 = CameraServer.getInstance().getVideo(camera2);
-			CvSource outputStream = CameraServer.getInstance().putVideo("Switcher", 320, 240);
-
-			Mat image = new Mat();
-
-			while (!Thread.interrupted()) {
-
-				if (xBox.getRawButton(5)) {
-					allowCam1 = !allowCam1;
-				}
-
-				if (allowCam1) {
-					cvSink2.setEnabled(false);
-					cvSink1.setEnabled(true);
-					cvSink1.grabFrame(image);
-				} else {
-					cvSink1.setEnabled(false);
-					cvSink2.setEnabled(true);
-					cvSink2.grabFrame(image);
-				}
-
-				outputStream.putFrame(image);
-			}
-
-		});
-		t.start();
+		// Thread t = new Thread(() -> {
+		//
+		// boolean allowCam1 = false;
+		//
+		// UsbCamera camera1 =
+		// CameraServer.getInstance().startAutomaticCapture(0);
+		// camera1.setResolution(320, 240);
+		// camera1.setFPS(30);
+		// UsbCamera camera2 =
+		// CameraServer.getInstance().startAutomaticCapture(1);
+		// camera2.setResolution(320, 240);
+		// camera2.setFPS(30);
+		//
+		// CvSink cvSink1 = CameraServer.getInstance().getVideo(camera1);
+		// CvSink cvSink2 = CameraServer.getInstance().getVideo(camera2);
+		// CvSource outputStream =
+		// CameraServer.getInstance().putVideo("Switcher", 320, 240);
+		//
+		// Mat image = new Mat();
+		//
+		// while (!Thread.interrupted()) {
+		//
+		// if (xBox.getRawButton(5)) {
+		// allowCam1 = !allowCam1;
+		// }
+		//
+		// if (allowCam1) {
+		// cvSink2.setEnabled(false);
+		// cvSink1.setEnabled(true);
+		// cvSink1.grabFrame(image);
+		// } else {
+		// cvSink1.setEnabled(false);
+		// cvSink2.setEnabled(true);
+		// cvSink2.grabFrame(image);
+		// }
+		//
+		// outputStream.putFrame(image);
+		// }
+		//
+		// });
+		//// t.start();
 
 	}
 
@@ -152,6 +160,7 @@ public class Robot extends IterativeRobot {
 	@Override
 	public void autonomousInit() {
 		autoMode = SmartDashboard.getString("Autonomous Mode");
+		autoStep = 0;
 	}
 
 	/**
@@ -159,14 +168,43 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousPeriodic() {
-//		if (autoMode.equals("L") || autoMode.equals("l")) {
-//
-//		} else if (autoMode.equals("C") || autoMode.equals("c")) {
-//
-//		} else if (autoMode.equals("R") || autoMode.equals("r")) {
-//
-//		}
-		
+		if (autoMode.equals("L") || autoMode.equals("l")) {
+			if (autoStep == 0) {
+				if (encoder.driveForwardAuton(24)) {
+					autoStep = 1;
+				}
+			} else if (autoStep == 1) {
+				if (!PixyFunctions.turnAndGoStraightAuton()) {
+					autoStep = 0;
+				}
+				if (ultraFunctions.driveFowardGearLoading()) {
+					autoStep = 2;
+				}
+			}
+			if (autoStep == 2) {
+				robotDriver.stop();
+			}
+
+		} else if (autoMode.equals("C") || autoMode.equals("c")) {
+			if (autoStep == 0) {
+				if (PixyFunctions.turnAndGoStraightAuton()) {
+					autoStep = 1;
+				}
+			} else if (autoStep == 1) {
+				if (!PixyFunctions.turnAndGoStraightAuton()) {
+					autoStep = 0;
+				}
+				if (ultraFunctions.driveFowardGearLoading()) {
+					autoStep = 2;
+				}
+			}
+			if (autoStep == 2) {
+				robotDriver.stop();
+			}
+		} else if (autoMode.equals("R") || autoMode.equals("r")) {
+
+		}
+
 	}
 
 	@Override
@@ -227,6 +265,17 @@ public class Robot extends IterativeRobot {
 			transport.set(-1);
 		} else {
 			transport.set(0);
+		}
+
+		if (xBox.getRawButton(3)) {
+			SmartDashboard.putString("I love robotics", "Turn me left");
+			gyro.moveDegreesTest(-90);
+
+		}
+		if (xBox.getRawButton(4)) {
+			SmartDashboard.putString("I love robotics", "Turn me right");
+			gyro.moveDegreesTest(90);
+
 		}
 
 		// Reads "twist" of the joystick to set the Azimuth of shooter

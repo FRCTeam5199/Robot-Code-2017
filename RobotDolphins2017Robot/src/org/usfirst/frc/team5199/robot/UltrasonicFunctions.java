@@ -102,7 +102,21 @@ public class UltrasonicFunctions {
 		}
 		robot.stop();
 	}
-	public static double driveFowardGearLoading() {
+	public static boolean driveFowardGearLoading() {
+		if (ultraData.ultraAverage() > 14) {
+			if (ultraData.ultraAverage()  > (20)) {
+				robot.drive(-.25, 0, 1);
+			}else if(ultraData.ultraAverage() > (14)) {
+					robot.drive(-.15, 0, 1);
+				}
+			}
+		if(ultraData.ultraAverage()<14){
+			return true;
+		}else{
+			return false;
+		}
+	}
+	public static double ultraAverage(){
 		return ultraData.ultraAverage();
 	}
 	public static void turnUltra(int degrees){

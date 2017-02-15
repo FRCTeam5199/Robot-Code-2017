@@ -21,30 +21,28 @@ public class PixyFunctions {
 	}
 	public static void placeGearOnPegPrimary(){
 		turnAndGoStraightAlign();
-		if (ultraFunctions.driveFowardGearLoading() > 14) {
-			while (ultraFunctions.driveFowardGearLoading()  > (20)) {
+		if (ultraFunctions.ultraAverage() > 14) {
+			while (ultraFunctions.ultraAverage()  > (20)) {
 				robot.drive(-.25, 0, 1);
-				if(Math.abs(pixyProc.averageData(0, false)[0]-160)>RobotMap.pixyGearDataBuffer){
+				if(Math.abs(pixyProc.adjustDataGear(pixyProc.averageData(0, false)[0])-160)>RobotMap.pixyGearDataBuffer){
 					turnAndGoStraightAlign();
 				}
 			}
-			if (ultraFunctions.driveFowardGearLoading() < (20)) {
-				while (ultraFunctions.driveFowardGearLoading()  > (14)) {
+			
+				while (ultraFunctions.ultraAverage()  > (14)) {
 					robot.drive(-.15, 0, 1);
-					if(Math.abs(pixyProc.averageData(0, false)[0]-160)>RobotMap.pixyGearDataBuffer){
+					if(Math.abs(pixyProc.adjustDataGear(pixyProc.averageData(0, false)[0])-160)>RobotMap.pixyGearDataBuffer){
 						turnAndGoStraightAlign();
 					}
 				}
-			}
+			
 		}
 		robot.stop();
 	}
-	public static void turnAndGoStraightAlign(){
-		int distance = pixyProc.averageData(0, false)[0];
-		int distanceOff;
-		do{
-			 distance = pixyProc.averageData(0, false)[0];
-			 distanceOff = distance -160;
+	public static boolean turnAndGoStraightAuton(){
+		double distance = pixyProc.averageData(0, false)[0];
+		double distanceOff =distance -160;
+		if((Math.abs(distanceOff)>RobotMap.pixyGearDataBuffer)){
 			 turnPower = Math.abs(.01*distanceOff*7.5/(distance));
 			 if(turnPower>.3){
 				 turnPower = .3;
@@ -55,8 +53,32 @@ public class PixyFunctions {
 				 robot.drive(-.25, turnPower, 1); 
 			 }
 			 ultraFunctions.goBackTooClosePixy();
-		}while(Math.abs(distance)>RobotMap.pixyGearDataBuffer);
+		}
+		if((Math.abs(distanceOff)>RobotMap.pixyGearDataBuffer)){
+			return false;
+		}else{
+			return true;
+		}
 	}
+	public static void turnAndGoStraightAlign(){
+		double distance = pixyProc.averageData(0, false)[0];
+		double distanceOff =distance -160;
+		do{
+			distance = pixyProc.averageData(0, false)[0];
+			distanceOff =distance -160;
+			 turnPower = Math.abs(.01*distanceOff*7.5/(distance));
+			 if(turnPower>.3){
+				 turnPower = .3;
+			 }
+			 if(distanceOff<0){
+				robot.drive(-.25, -1*turnPower, 1);
+			 }else if(distanceOff>0){
+				 robot.drive(-.25, turnPower, 1); 
+			 }
+			 ultraFunctions.goBackTooClosePixy();
+		}while(((Math.abs(distanceOff)>RobotMap.pixyGearDataBuffer)));
+	}
+	
 	public static void alignGear(){
 		double currentTime = System.currentTimeMillis();
 		do{
@@ -158,21 +180,33 @@ public class PixyFunctions {
 				xAdjustment = pixyProc.averageData(0, false)[0];
 				if(xAdjustment+RobotMap.pixyShooterDistanceOff<160){
 					if(xAdjustment+RobotMap.pixyShooterDistanceOff<140){
+					if(encoder.checkLimits()){
 					turret.set(.5);
+					}
 					}else if(xAdjustment+RobotMap.pixyShooterDistanceOff<155){
+						if(encoder.checkLimits()){
 						turret.set(.25);
+						}
 					}else{
+						if(encoder.checkLimits()){
 						turret.set(.15);
+						}
 					}
 				}else{
 					if(xAdjustment+RobotMap.pixyShooterDistanceOff<180){
-						turret.set(.5);
+						if(encoder.checkLimits()){
+						turret.set(-.5);
+						}
 						}else if(xAdjustment+RobotMap.pixyShooterDistanceOff<165){
-							turret.set(.25);
+							if(encoder.checkLimits()){
+							turret.set(-.25);
+							}
 						}else{
-							turret.set(.15);
-
-						}				}
+							if(encoder.checkLimits()){
+							turret.set(-.15);
+							}
+						}		
+					}
 			}while(Math.abs(xAdjustment+RobotMap.pixyShooterDistanceOff-160)<RobotMap.pixyShooterDataBuffer);
 			turret.set(0);
 		}
