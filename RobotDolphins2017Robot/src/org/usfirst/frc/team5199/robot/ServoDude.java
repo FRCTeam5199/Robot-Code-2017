@@ -4,22 +4,22 @@ import edu.wpi.first.wpilibj.Servo;
 
 public class ServoDude {
 	//New class for controlling servos 
-	public static Servo servoDude;
+	public static Servo servo;
 	public static double increment = 0.005;
 	public static double position = 0.0;
 	public static double tolerance = 0.05;
 	
-	public ServoDude(Servo servo){
+	public ServoDude(Servo giveNRG){
 		//Constructor; sets the servoDude to inputed servo
-		servoDude = servo;
+		servo = giveNRG;
 	}
 	
-	public static void set(double servoBoy){
+	public static void set(double value){
 		//sets to an inputed value
-		servoDude.set(servoBoy);
+		servo.set(value);
 	}
 	
-	public static void increment(double input){
+	public void increment(double input){
 		//increments up or down depending on the input value
 		//Used with the joystick for more manual control over the servo
 		//when using the joystick, up on the Y-axis is negative, hence the first 
@@ -30,12 +30,12 @@ public class ServoDude {
 				position = 1.0;
 			}
 		}
-		if (input > 0.05) {
+		if (input > tolerance) {
 			position = position - increment;
 			if (position < 0.0) {
 				position = 0.0;
 			}
 		}
-		servoDude.set(position);
+		servo.set(position);
 	}
 }

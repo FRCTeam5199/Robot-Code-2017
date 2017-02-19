@@ -3,6 +3,7 @@ package org.usfirst.frc.team5199.robot;
 import edu.wpi.first.wpilibj.Spark;
 import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.TalonSRX;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class PixyFunctions {
 	public static PixyProcess pixyProc, pixyProcShooter;
@@ -40,27 +41,56 @@ public class PixyFunctions {
 		robot.stop();
 	}
 	public static boolean turnAndGoStraightAuton(){
-		double distance = pixyProc.averageData(0, false)[0];
-		double distanceOff =distance -160;
+		boolean right = false;
+		if(pixyProc.averageData(0, false)[0]!=-1){
+		//double distance = pixyProc.averageData(0, false)[0];
+		double[] pixyValues = pixyProc.xPosGear();
+		double distance = pixyValues[0];
+		double distanceOff = distance -160;
+		SmartDashboard.putNumber("Distance Off", distanceOff);
 		if((Math.abs(distanceOff)>RobotMap.pixyGearDataBuffer)){
-			 turnPower = Math.abs(.01*distanceOff*7.5/(distance));
-			 if(turnPower>.3){
-				 turnPower = .3;
+			 
+//			 if(Math.abs(distanceOff)>15){
+//				 turnPower = .3;
+//			 }else{
+//				 turnPower =.15;
+//			 }
+			double maths = 7.5*distanceOff*Math.abs(pixyValues[1]-pixyValues[2]);
+			 if(maths>4){
+				 turnPower = .1*(maths-4);
+			 }else{
+				 return true;
 			 }
-			 if(distanceOff<0){
-				robot.drive(-.25, -1*turnPower, 1);
-			 }else if(distanceOff>0){
-				 robot.drive(-.25, turnPower, 1); 
+			 if(distanceOff<(-1*RobotMap.pixyGearDataBuffer)){
+//				robot.drive(-.2, -.4, 1);
+				 robot.deadTurn(-1*turnPower, 1);
+				 right = false;
+			 }else if(distanceOff>RobotMap.pixyGearDataBuffer){
+//				 robot.drive(-.2, .4, 1); 
+				 robot.deadTurn(turnPower, 1);
+				 right = true;
+			 }else{
+//				 if(right){
+//					 robot.deadTurn(-.1, 1);
+//				 }else{
+//					 robot.deadTurn(.1, 1);
+//				 }
+//				
+			 robot.stop();
 			 }
-			 ultraFunctions.goBackTooClosePixy();
+//			 ultraFunctions.goBackTooClosePixyAuton();
 		}
 		if((Math.abs(distanceOff)>RobotMap.pixyGearDataBuffer)){
 			return false;
 		}else{
 			return true;
 		}
+		
+	}
+		return false;
 	}
 	public static void turnAndGoStraightAlign(){
+		if(pixyProc.averageData(0, false)[0]!=0){
 		double distance = pixyProc.averageData(0, false)[0];
 		double distanceOff =distance -160;
 		do{
@@ -77,6 +107,7 @@ public class PixyFunctions {
 			 }
 			 ultraFunctions.goBackTooClosePixy();
 		}while(((Math.abs(distanceOff)>RobotMap.pixyGearDataBuffer)));
+		}
 	}
 	
 	public static void alignGear(){
@@ -101,7 +132,7 @@ public class PixyFunctions {
 		//turn 45 degrees using encoders
 				encoder.turnClicks(turnAngle, turnRight); //change to be number for a 45 degree turn
 				//drive forward a distance using encoders to center on peg
-				encoder.driveForward(distanceToDrive); //how far in inches to drive forward
+				encoder.driveForwardFink(distanceToDrive); //how far in inches to drive forward
 				// turn back 45 degrees using encoders
 				if(turnRight){
 					turnRight=false;
@@ -134,7 +165,7 @@ public class PixyFunctions {
 						//turn 45 degrees using encoders
 						encoder.turnClicks(45, turnRight); //change to be number for a 45 degree turn
 						//drive forward a distance using encoders to center on peg
-						encoder.driveForward(distanceToDrive); //how far in inches to drive forward
+						encoder.driveForwardFink(distanceToDrive); //how far in inches to drive forward
 						// turn back 45 degrees using encoders
 						if(turnRight){
 							turnRight=false;
@@ -148,24 +179,17 @@ public class PixyFunctions {
 				}
 		
 	public static boolean checkIfAlignedGear(){
-		double currentTime = System.currentTimeMillis();
-		do{
-		pixyProc.averageData(0, false);
-		}while((System.currentTimeMillis()-currentTime)<300);
-		int xAdjustment = pixyProc.averageData(0, false)[0];
-		if(Math.abs(xAdjustment+RobotMap.pixyGearDistanceOff-160)<RobotMap.pixyGearDataBuffer){
+	
+		double xAdjustment = pixyProc.xPosGear()[0];
+		if(Math.abs(xAdjustment-160)<RobotMap.pixyGearDataBuffer){
 			return true;
 		}else{
 			return false;
 		}
 	}
 	public static boolean checkIfAlignedShooter(){
-		double currentTime = System.currentTimeMillis();
-		do{
-		pixyProc.averageData(0, false);
-		}while((System.currentTimeMillis()-currentTime)<100);
-		int xAdjustment = pixyProc.averageData(0, false)[0];
-		if(Math.abs(xAdjustment+RobotMap.pixyShooterDistanceOff-160)<RobotMap.pixyShooterDataBuffer){
+		double xAdjustment = pixyProc.xPosShooter();
+		if(Math.abs(xAdjustment-160)<RobotMap.pixyShooterDataBuffer){
 			return true;
 		}else{
 			return false;
@@ -175,15 +199,15 @@ public class PixyFunctions {
 		//checks to see if the turret is lined up with the boiler
 		//if it is not aligned, turret centers on target
 		if(!checkIfAlignedShooter()){
-			int xAdjustment = pixyProc.averageData(0, false)[0];
+			double xAdjustment =0;
 			do{
-				xAdjustment = pixyProc.averageData(0, false)[0];
-				if(xAdjustment+RobotMap.pixyShooterDistanceOff<160){
-					if(xAdjustment+RobotMap.pixyShooterDistanceOff<140){
+				xAdjustment = pixyProc.xPosShooter();
+				if(xAdjustment<160){
+					if(xAdjustment<140){
 					if(encoder.checkLimits()){
 					turret.set(.5);
 					}
-					}else if(xAdjustment+RobotMap.pixyShooterDistanceOff<155){
+					}else if(xAdjustment<155){
 						if(encoder.checkLimits()){
 						turret.set(.25);
 						}
@@ -193,11 +217,11 @@ public class PixyFunctions {
 						}
 					}
 				}else{
-					if(xAdjustment+RobotMap.pixyShooterDistanceOff<180){
+					if(xAdjustment<180){
 						if(encoder.checkLimits()){
 						turret.set(-.5);
 						}
-						}else if(xAdjustment+RobotMap.pixyShooterDistanceOff<165){
+						}else if(xAdjustment<165){
 							if(encoder.checkLimits()){
 							turret.set(-.25);
 							}
@@ -207,7 +231,7 @@ public class PixyFunctions {
 							}
 						}		
 					}
-			}while(Math.abs(xAdjustment+RobotMap.pixyShooterDistanceOff-160)<RobotMap.pixyShooterDataBuffer);
+			}while(Math.abs(xAdjustment-160)<RobotMap.pixyShooterDataBuffer);
 			turret.set(0);
 		}
 		//calculates the speed and angle necessary to shoot
@@ -217,5 +241,46 @@ public class PixyFunctions {
 		//adjusts motor speed
 		
 		//transports balls to be shot
+	}
+	public static void alignGearPegTest(){
+		int[] distanceX =  pixyProc.averageData(2,true);
+    	int distance = distanceX[0];
+    	if(distance>0){
+    	do{
+    		 distanceX =  pixyProc.averageData(2, true);
+    		 if(distanceX[0]>0){
+    			 distance = distanceX[0];
+    		 }
+ 	    	
+	    	int distanceOff = distance -100; //100 instead of 160 because 60 is the constant off or whatever number
+	    	do{
+	    		 distanceX =  pixyProc.averageData(2,true);
+	    		 if(distanceX[0]>0){
+	    			 distance = distanceX[0];
+	    		 }
+	 	    	
+	    		double turnPower = Math.abs(.01*distanceOff*7.5/(distance));
+	    		if(turnPower>.3){
+	    			turnPower =.3;
+	    		}
+	    		
+	    		if(distanceOff<0){
+	    		robot.drive(.25,turnPower, 1);
+	    		} else if(distanceOff>0){
+		    		robot.drive(.25, -1*turnPower, 1);
+		    		}
+//	    	ultraFunctions.goBackTooClosePixy();
+	    	}while((Math.abs(distance+60)-160)>3); 
+    	
+	    	//the number 60 is the constant of the displacement of pixy cam
+	    	//this is determined experimentally and should be changed
+	    	
+	    	//this centers the robot after "centering" to ensure that the robot truly centered itself
+//	    	ultraFunctions.selfStraight();
+//	    	ultraFunctions.goBackTooClosePixy();
+    	}while((Math.abs(distance+60)-160)>3);
+    	}
+//    	ultraFunctions.driveFowardUntil(12);
+    	robot.stop();
 	}
 }

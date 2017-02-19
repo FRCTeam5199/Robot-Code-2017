@@ -15,8 +15,8 @@ public class RobotDrive {
 	// this is the routine that we expect to used to drive the bot in manual
 	// mode.
 	public static void drive(double Y, double X, double driveMod) {
-		leftMotor.set((Y + X) * driveMod);
-		rightMotor.set((((Y * -1) + X) * driveMod));
+		rightMotor.set((Y + X) * driveMod);
+		leftMotor.set((((Y * -1) + X) * driveMod) *1.4);
 	}
 
 	// Another idea using two sticks, but not planned to be used.
@@ -27,7 +27,7 @@ public class RobotDrive {
 
 	// May be useful for auton or gyro turning.
 	public static void deadTurn(double X, double driveMod) {
-		leftMotor.set(driveMod * (X));
+		leftMotor.set(driveMod * (X) * 1.2);
 		rightMotor.set(driveMod * X);
 
 	}

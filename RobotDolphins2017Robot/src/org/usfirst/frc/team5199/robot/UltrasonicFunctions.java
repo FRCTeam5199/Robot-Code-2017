@@ -19,11 +19,9 @@ public class UltrasonicFunctions {
 		// TODO Auto-generated constructor stub
 	}
 
-	public static void selfStraight() {
+	public static boolean selfStraight() {
 		double seperation = ultraData.distanceRight() - ultraData.distanceLeft();
-		do{
 		if (seperation >= buffer) {
-			while (ultraData.distanceRight() - ultraData.distanceLeft() >= buffer && stick.getRawButton(2)) {
 				if(seperation>10){
 				robot.deadTurn(.5, 1);
 				}else if(seperation>5){
@@ -31,10 +29,8 @@ public class UltrasonicFunctions {
 				}else{
 					robot.deadTurn(.15, 1);
 				}
-			}
-
+				return false;
 		} else if (seperation <= ((-1) * buffer)) {
-			while (ultraData.distanceLeft() - ultraData.distanceRight() >= buffer && stick.getRawButton(2)) {
 				if(seperation<-10){
 					robot.deadTurn(.5, 1);
 					}else if(seperation<-5){
@@ -42,11 +38,10 @@ public class UltrasonicFunctions {
 					}else{
 						robot.deadTurn(.15, 1);
 					}
-			}
+			return false;
 		}
-		 seperation = ultraData.distanceRight() - ultraData.distanceLeft();
-		}while(Math.abs(seperation)>buffer);
 		robot.stop();
+		return true;
 	}
 
 	public static void goBackTooClosePixy() {
@@ -57,6 +52,17 @@ public class UltrasonicFunctions {
 			} while (ultraData.distanceLeft() < (tooClosePixy + 4) || ultraData.distanceLeft() < (tooClosePixy + 4));
 			robot.stop();
 		}
+	}
+	
+	public static boolean goBackTooClosePixyAuton() {
+
+		if (ultraData.distanceLeft() < tooClosePixy || ultraData.distanceRight() < tooClosePixy) {
+			 if (ultraData.distanceLeft() < (tooClosePixy + 8) || ultraData.distanceLeft() < (tooClosePixy + 8)) {
+				robot.drive(-.35, 0, 1);
+			}
+			 return true;
+		}
+		return false;
 	}
 	public static void swivelForward(double distance){
 		boolean turnRight = true;
@@ -102,15 +108,17 @@ public class UltrasonicFunctions {
 		}
 		robot.stop();
 	}
-	public static boolean driveFowardGearLoading() {
-		if (ultraData.ultraAverage() > 14) {
-			if (ultraData.ultraAverage()  > (20)) {
-				robot.drive(-.25, 0, 1);
-			}else if(ultraData.ultraAverage() > (14)) {
-					robot.drive(-.15, 0, 1);
+	
+	public static boolean driveFowardAuton( int distance) {
+		if (ultraData.ultraAverage() > distance) {
+			if (ultraData.ultraAverage()  > (distance + 6)) {
+				robot.drive(-.2, 0, 1);
+			}else {
+					robot.drive(-.1, 0, 1);
 				}
 			}
-		if(ultraData.ultraAverage()<14){
+		if(ultraData.ultraAverage()<distance){
+			robot.drive(.033, 0, 1);
 			return true;
 		}else{
 			return false;

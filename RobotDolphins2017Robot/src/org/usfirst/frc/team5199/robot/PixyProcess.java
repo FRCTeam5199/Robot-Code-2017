@@ -21,6 +21,13 @@ public class PixyProcess {
 	public static double timeStart = 0;
 	public static double elapsedTime = 0;
 	public static int byteCount=0;
+	public static double oldAverage=0;
+	public static double oldAverageShooter = 0;
+	public static double oldX1 =0;
+	public static double oldX2=0;
+	public static double[] gearData= {0,0,0};
+	public static int result[] = { -1, -1 };
+	
 	public PixyProcess(Pixy pixy) {
 		pixyCam = pixy;
 		averageDataValueArrayX = new short[pixyBuffer];
@@ -44,12 +51,17 @@ public class PixyProcess {
 		SmartDashboard.putNumber("Loops", loops);
 		if (pixyCam.getStartOfData() == 1) {
 			blockCount++;
-
+			SmartDashboard.putString("Pixy Data", "Reading");
+		}
+		else{
+			SmartDashboard.putString("Pixy Data", "Failed");
 		}
 		SmartDashboard.putNumber("PixyBlocks", blockCount);
 		SmartDashboard.putNumber("Loops per second", loops / elapsedTime);
 		SmartDashboard.putNumber("PixyBlocks per second", blockCount / elapsedTime);
-		//SmartDashboard.putNumber("Avg X", averageData(0)[0]);
+		SmartDashboard.putNumber("Avg X", averageData(0, false)[0] );
+		SmartDashboard.putNumber("Distance off", averageData(0, false)[0] - 160);
+		
 	}
 
 	public static void pixyI2CTest() {
@@ -74,14 +86,61 @@ public class PixyProcess {
 		byteCount =0;
 	}
 	public static double adjustDataGear(int pixels){
-		//TODO put in exact measurement for inches off the pixy cam is current estimate is 9.5
-		return pixels-((9.5*distanceBetweenRightAndLeft())/7.5);
-		
+		//TODO put in exact measurement for inches off the pixy cam is current estimate is 8
+		return pixels-((8*distanceBetweenRightAndLeft())/7.5);	
+	}
+	public static double[] xPosGear(){
+		if (pixyCam.getStartOfData() == 1) {
+		short sig;
+		int avgX, avgY;
+		byte[] syncedBufferWithoutSync = new byte[26];
+		syncedBufferWithoutSync = pixyCam.getVariableSizeBuffer(26);
+		if (debugLevel == 2) {
+			SmartDashboard.putNumber("Buffer 12", syncedBufferWithoutSync[12]);
+			SmartDashboard.putNumber("Buffer 13", syncedBufferWithoutSync[13]);
+		}
+		if ((syncedBufferWithoutSync[12]) == 85 && (syncedBufferWithoutSync[13] == -86))// Looking
+																						// 0x55
+																						// and
+																						// 0xaa
+		{
+			SyncedLongBlock block = new SyncedLongBlock(syncedBufferWithoutSync);
+				
+			
+			oldX1 = block.getX(0);
+			oldX2 = block.getX(1);
+			oldAverage = block.getAvgX()+7.5*Math.abs(oldX1-oldX2)/8.25;
+			gearData[0] = oldAverage;
+			gearData[1] = oldX1;
+			gearData[2] = oldX2;
+			return gearData;
+		}
+		}
+		return gearData;
+	}
+	public static double xPosShooter(){
+		if (pixyCam.getStartOfData() == 1) {
+			short sig;
+			int avgX, avgY;
+			byte[] syncedBufferWithoutSync = new byte[26];
+			syncedBufferWithoutSync = pixyCam.getVariableSizeBuffer(26);
+			
+			if ((syncedBufferWithoutSync[12]) == 85 && (syncedBufferWithoutSync[13] == -86))// Looking
+																							// 0x55
+																							// and
+																							// 0xaa
+			{
+				SyncedLongBlock block = new SyncedLongBlock(syncedBufferWithoutSync);
+				oldAverageShooter = block.getAvgX();
+				return oldAverageShooter;
+			}
+			}
+			return oldAverageShooter;
 	}
 	public static int[] averageData(int mode, boolean displayResults) {
 		// mode = 0: return average x value
 		// mode = 1: return average x and average y
-		int result[] = { -1, -1 };
+		
 
 		if (pixyCam.getStartOfData() == 1) {
 
@@ -156,9 +215,7 @@ public class PixyProcess {
 			}
 
 		}
-		if(sumOfBufferX>0){
-			result[0] = sumOfBufferX/pixyBuffer;
-		}
+		
 		if(displayResults){
 			SmartDashboard.putNumber("Avg X", result[0]);
 			SmartDashboard.putNumber("PixyBlocks", blockCount);
@@ -209,7 +266,7 @@ public class PixyProcess {
 					return Math.abs(block.getX(0)-block.getX(1));
 				}
 			}
-		return 0;
+		return -1;
 	}
 	
 

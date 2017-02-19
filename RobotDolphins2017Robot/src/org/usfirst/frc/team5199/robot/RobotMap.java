@@ -18,30 +18,34 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  */
 public class RobotMap {
 
-	public static int leftMotor = 0; // pwm
-	public static int rightMotor = 1; // pwm
-	public static int shooter = 3; // pwm
-	public static int angleAdjuster = 4; // pwm
-	public static int turret = 0; // CAN Bus
+	public static int leftMotor = 1; // pwm
+	public static int rightMotor = 0; // pwm
+	public static int shooter = 0; // CAN Bus
+	public static int turret = 1; // CAN Bus
 	public static int shooterServo = 9; // pwm
+	public static int shooterServo2 = 3; //pwm
 	public static int intake = 2; // pwm
 	public static int transport = 8; // pwm
 	public static int climber = 7; // pwm
+	
+	public static int gearShift = 5;
 
-	public static int ultraRightPing = 3; // DIO
-	public static int ultraRightEcho = 2; // DIO
-	public static int ultraLeftPing = 5; // DIO
-	public static int ultraLeftEcho = 4; // DIO
+	public static int ultraRightPing = 2; // DIO
+	public static int ultraRightEcho = 3; // DIO
+	public static int ultraLeftPing = 0; // DIO
+	public static int ultraLeftEcho = 1; // DIO
 
 	public static int xBoxPort = 0; // computerUsb
 	public static int joyStickPort = 1; // computerUsb
 
 	public static int canTalonPort = 1; // canPort
 
-	public static int encoderRightDIOA = 8; // DIO
-	public static int encoderRightDIOB = 9; // DIO
-	public static int encoderLeftDIOA = 1; // DIO
-	public static int encoderLeftDIOB = 2; // DIO
+	public static int encoderRightDIOA = 6; // DIO
+	public static int encoderRightDIOB = 7; // DIO
+	public static int encoderLeftDIOA = 4; // DIO
+	public static int encoderLeftDIOB = 5; // DIO
+	public static int encoderShooterDIOA = 9; //DIO
+	public static int encoderShooterDIOB = 10; //DIO
 
 	public static int usbCamera1 = 0; // RoboRio usb
 	public static int usbCamera2 = 1; // RoboRio usb
@@ -57,15 +61,16 @@ public class RobotMap {
 	public static double distanceFromPeg = 13; // in inches for the distance
 												// from the gear peg
 
-	public static int pixyGearDistanceOff = 40; // in pixels for the gear
+	public static int pixyGearDistanceOff = 4; // in pixels for the gear
 												// Pixycam
-	public static int pixyGearDataBuffer = 5; // in pixels for the gear PixyCam
+	public static int pixyGearDataBuffer = 20; // in pixels for the gear PixyCam
 	public static int pixyShooterDistanceOff = 10;// in pixels for the shooter
 													// Pixycam
 	public static int pixyShooterDataBuffer = 5; // in pixels for the shooter
 													// Pixycam
 
 	public static double inchesPerRotation = 4 * Math.PI; // for 4 inch wheels
+	public static double inchesPerRotationShooter = 4*Math.PI; //for the rpms
 	public static double stoppedDetectionTime = .1; // sets time for max period
 													// in seconds
 	public static double minimumRateStopped = .5; // speed until stopped
@@ -73,15 +78,58 @@ public class RobotMap {
 													// turned per degree of
 													// rotation
 
-	public static double[] rampUpDistance = { 12, 36 }; // distance thresholds
+	public static double[] rampUpDistance = { 6, 18 }; // distance thresholds
 														// for acceleration
-	public static double[] rampUpSpeed = { .1, .2, .5 };// speeds for the
+	public static double[] rampUpSpeed = { .3, .4, .5 };// speeds for the
 														// different distances
-	public static double[] rampDownDistance = { 96, 48, 24 }; // distance
+	public static double[] rampDownDistance = { 36, 12, 6 }; // distance
 																// thresholds
 																// for
 																// deceleration
-	public static double[] rampDownSpeed = { .5, .2, .1 };// speeds for the
+	public static double[] rampDownSpeed = { .5, .4, .3 };// speeds for the
 															// different
 															// distances
+	public static double   maxStraightSpeed = 1.0;      // speeds for the
+	public static int 		climberChannel =10;
+	
+	//Button Map
+	//Xbox Controller Map
+	
+	public static int turnAroundButton =1;
+	public static int flipDirectionButton = 2;
+	public static int ultraForwardButton =3;
+	public static int gearShiftButton = 4;
+	//Unused Buttons:
+	/*
+	 * left Bumper
+	 * right bumper
+	 * left trigger
+	 * right trigger
+	 */
+	//Joystick Controller Map
+	public static int shootButton = 1;
+	public static int transportButton =2;
+	public static int sweeperButton =3;
+	public static int climberButton =4;
+	public static int highServoButton = 5;
+	public static int lowServoButton =6;
+	public static int turretButton = 7; //axis not a button
+	public static int enableRumbleButton =11;
+	public static int encoderTestDriveButton =12;
+	/*
+	 * Joystick
+	 * Trigger is full shoot
+	 * spin up flywheel thumb
+	 * shooter constant of .9
+	 * 4 and 3 intake 
+	 * pov hat is servo
+	 * 5 and 6 climber
+	 * 
+	 * 
+	 * xBox
+	 * stick driving (halo)
+	 * drive swap on y also switches camera
+	 * 
+	 */
+	
 }
