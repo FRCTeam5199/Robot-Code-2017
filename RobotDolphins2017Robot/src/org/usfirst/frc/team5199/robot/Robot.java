@@ -1,4 +1,3 @@
-
 package org.usfirst.frc.team5199.robot;
 
 import org.opencv.core.Mat;
@@ -15,6 +14,7 @@ import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PowerDistributionPanel;
+import edu.wpi.first.wpilibj.Relay;
 import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.Spark;
@@ -27,15 +27,26 @@ import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
+import edu.wpi.first.wpilibj.SampleRobot;
+import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
 /**
- * The VM is configured to automatically run this class, and to call the
- * functions corresponding to each mode, as described in the IterativeRobot
- * documentation. If you change the name of this class or the package after
- * creating this project, you must also update the manifest file in the resource
- * directory.
+ * *****************************************************************************
+ * ***************************************************** Robot Dolphins from
+ * Outer Space should use the extension SampleRobot due to its efficiency in
+ * looping quickly through the tele-op periodic IterativeRobot extension should
+ * be avoided because a fast iteration rate is absolutely necessary (1000+
+ * loops/sec vs 20 loops/sec)
+ * 
+ * 
  */
-@SuppressWarnings("unused")
-public class Robot extends IterativeRobot {
+public class Robot extends SampleRobot {
+	public int counter = 0;
+
+	Relay relay;
 	Pixy pixyGear, pixyShooter;
 	PixyProcess pixyGearProc;
 	PixyFunctions pixyFunctionsGear, pixyFunctionsShooter;
@@ -45,7 +56,7 @@ public class Robot extends IterativeRobot {
 	CANTalon turret;
 	UltrasonicData ultraData;
 	UltrasonicFunctions ultraFunctions;
-	EncoderFunctions encoder;
+	EncoderDriveFunctions encoder;
 	RobotDrive robotDriver;
 	Joystick xBox, stick;
 	GyroFunctions gyro;
@@ -66,16 +77,18 @@ public class Robot extends IterativeRobot {
 	int stepShooter = 0;
 	int shooterSpeed = 2000;
 	public static double position = 0.0, increment = 0.001;
-	public static double straightMod = 1, turnMod = 1, driveMod = 1;
+	public static double straightMod = 1, turnMod = .6, driveMod = 1;
 	public static int shiftStep = 0;
 	public static int shifter = 0;
+	boolean left;
 
-	/**
-	 * This function is run when the robot is first started up and should be
-	 * used for any initialization code.
-	 */
+	public Robot() {
+
+	}
+
 	@Override
 	public void robotInit() {
+		counter = 0;
 		pdp = new PowerDistributionPanel();
 		rightMotor = new Spark(RobotMap.rightMotor);
 		leftMotor = new Spark(RobotMap.leftMotor);
@@ -84,7 +97,7 @@ public class Robot extends IterativeRobot {
 		transport = new Spark(RobotMap.transport);
 		climber = new Spark(RobotMap.climber);
 		turret = new CANTalon(RobotMap.turret);
-		encoder = new EncoderFunctions(rightMotor, leftMotor, shooter);
+		encoder = new EncoderDriveFunctions(rightMotor, leftMotor, shooter);
 		encoder.resetDrive();
 		ultraData = new UltrasonicData(RobotMap.ultraRightEcho, RobotMap.ultraRightPing, RobotMap.ultraLeftEcho,
 				RobotMap.ultraLeftPing);
@@ -104,7 +117,9 @@ public class Robot extends IterativeRobot {
 		servoBoy = new ServoDude(servo2);
 		strokePos = 0.0;
 		solenoid = new DoubleSolenoid(4, 5);
+		gyro.gyro.calibrate();
 
+		relay = new Relay(0);
 		// server = CameraServer.getInstance();
 		// server.startAutomaticCapture(0);
 		SmartDashboard.putString("Autonomous Mode", "Enter Value");
@@ -154,38 +169,6 @@ public class Robot extends IterativeRobot {
 		});
 		t.start();
 
-	}
-
-	/**
-	 * This function is called once each time the robot enters Disabled mode.
-	 * You can use it to reset any subsystem information you want to clear when
-	 * the robot is disabled.
-	 */
-	@Override
-	public void disabledInit() {
-		compressor = new Compressor(0);
-		compressor.setClosedLoopControl(true);
-
-	}
-
-	@Override
-	public void disabledPeriodic() {
-		compressor.setClosedLoopControl(true);
-	}
-
-	/**
-	 * This autonomous (along with the chooser code above) shows how to select
-	 * between different autonomous modes using the dashboard. The sendable
-	 * chooser code works with the Java SmartDashboard. If you prefer the
-	 * LabVIEW Dashboard, remove all of the chooser code and uncomment the
-	 * getString code to get the auto name from the text box below the Gyro
-	 *
-	 * You can add additional auto modes by adding additional commands to the
-	 * chooser code above (like the commented example) or additional comparisons
-	 * to the switch structure below with additional strings & commands.
-	 */
-	@Override
-	public void autonomousInit() {
 		autoMode = SmartDashboard.getString("Autonomous Mode");
 		autoStep = 0;
 		encoder.initEncoders();
@@ -193,64 +176,68 @@ public class Robot extends IterativeRobot {
 	}
 
 	/**
-	 * This function is called periodically during autonomous
+	 * This autonomous (along with the chooser code above) shows how to select
+	 * between different autonomous modes using the dashboard. The sendable
+	 * chooser code works with the Java SmartDashboard. If you prefer the
+	 * LabVIEW Dashboard, remove all of the chooser code and uncomment the
+	 * getString line to get the auto name from the text box below the Gyro
+	 *
+	 * You can add additional auto modes by adding additional comparisons to the
+	 * if-else structure below with additional strings. If using the
+	 * SendableChooser make sure to add them to the chooser code above as well.
 	 */
 	@Override
-	public void autonomousPeriodic() {
+	public void autonomous() {
 		if (autoMode.equals("L") || autoMode.equals("l")) {
-			// if (autoStep == 0) {
-			// encoder.initEncoders();
-			// autoStep = 1;
-			// }
-			// if (autoStep == 1) {
-			// // TODO figure out number
-			// if (encoder.driveForwardAuton(74)) {
-			// autoStep = 2;
-			// }
-			// }
-			// if (autoStep == 2) {
-			// gyro.initGyro();
-			// autoStep = 3;
-			// }
-			// if (autoStep == 3) {
-			// if (gyro.moveDegreesAuton(60)) {
-			// autoStep = 4;
-			// }
-			// }
-			// if(autoStep ==4){
-			// encoder.initEncoders();
-			// autoStep = 5;
-			// }
-			// if(autoStep ==5){
-			// if(encoder.driveStraightAuton(29)){
-			// autoStep =6;
-			// }
-			// }
-			// if(autoStep ==6){
-			// if(ultraFunctions.driveFowardAuton(16)){
-			// autoStep =7;
-			// }
-			// }
-			// if(autoStep ==7){
-			// robotDriver.stop();
-			// }
+			if (autoStep == 0) {
+				encoder.initEncoders();
+				solenoid.set(DoubleSolenoid.Value.kForward);
+				startTime = System.currentTimeMillis();
+				autoStep = 1;
+			}
 
-			// if (autoStep == 4) {
-			// if (pixyFunctionsGear.turnAndGoStraightAuton()) {
-			// autoStep = 5;
-			// }
-			// } else if (autoStep == 5) {
-			// if (!pixyFunctionsGear.turnAndGoStraightAuton()) {
-			// autoStep = 4;
-			// }
-			// if (ultraFunctions.driveFowardAuton(14)) {
-			// autoStep = 6;
-			// }
-			// }
-			// if (autoStep == 6) {
-			// robotDriver.stop();
-			// }
+			if (autoStep == 1) {
+				// TODO: Set time in robot map
+				if (System.currentTimeMillis() - startTime > 1000) {
+					solenoid.set(DoubleSolenoid.Value.kOff);
+				}
+				if (encoder.driveStraightAuton(57)) {
+					autoStep = 2;
+					currAngle = gyro.getAngle();
+					encoder.initEncoders();
+				}
+			}
+			if (autoStep == 2) {
+				if (encoder.autonSixtyDegreeTurn(currAngle, false)) {
+					autoStep = 3;
+				}
+			}
+			if (autoStep == 3) {
+				encoder.initEncoders();
+				autoStep = 4;
+			}
+			if (autoStep == 4) {
+				if (encoder.driveStraightAuton(21)) {
+					autoStep = 5;
+				}
+			}
+			if (autoStep == 5) {
+				if (pixyFunctionsGear.turnAndGoStraightAuton()) {
+					autoStep = 6;
+				}
+				if (ultraData.distanceRight() < 10 || ultraData.distanceLeft() < 10) {
+					autoStep = 6;
+				}
+			}
 
+			if (autoStep == 6) {
+				if (ultraFunctions.driveFowardAuton(4)) {
+					autoStep = 7;
+				}
+			}
+			if (autoStep == 7) {
+				robotDriver.stop();
+			}
 		} else if (autoMode.equals("C") || autoMode.equals("c")) {
 			if (autoStep == 0) {
 				encoder.initEncoders();
@@ -264,13 +251,17 @@ public class Robot extends IterativeRobot {
 				if (System.currentTimeMillis() - startTime > 1000) {
 					solenoid.set(DoubleSolenoid.Value.kOff);
 				}
-				if (encoder.driveStraightAuton(45)) {
+				if (encoder.driveStraightAuton(38)) {
 					autoStep = 2;
 				}
 			}
 			if (autoStep == 2) {
-				// if (ultraFunctions.selfStraight()) {
-				autoStep = 3;
+				if (pixyFunctionsGear.turnAndGoStraightAuton()) {
+					autoStep = 3;
+				}
+				if (ultraData.distanceRight() < 10 || ultraData.distanceLeft() < 10) {
+					autoStep = 3;
+				}
 			}
 
 			if (autoStep == 3) {
@@ -280,309 +271,553 @@ public class Robot extends IterativeRobot {
 			}
 			if (autoStep == 4) {
 				robotDriver.stop();
+				startTime = System.currentTimeMillis();
+			}
+		} else if (autoMode.equals("R") || autoMode.equals("r")) {
+			if (autoStep == 0) {
+				encoder.initEncoders();
+				solenoid.set(DoubleSolenoid.Value.kForward);
+				startTime = System.currentTimeMillis();
+				autoStep = 1;
+			}
+
+			if (autoStep == 1) {
+				// TODO: Set time in robot map
+				if (System.currentTimeMillis() - startTime > 1000) {
+					solenoid.set(DoubleSolenoid.Value.kOff);
+				}
+				if (encoder.driveStraightAuton(57)) {
+					autoStep = 2;
+					currAngle = gyro.getAngle();
+					encoder.initEncoders();
+				}
+			}
+			if (autoStep == 2) {
+				if (encoder.autonSixtyDegreeTurn(currAngle, true)) {
+					autoStep = 3;
+				}
+			}
+			if (autoStep == 3) {
+				encoder.initEncoders();
+				autoStep = 4;
+			}
+			if (autoStep == 4) {
+				if (encoder.driveStraightAuton(21)) {
+					autoStep = 5;
+				}
+			}
+			if (autoStep == 5) {
+				if (pixyFunctionsGear.turnAndGoStraightAuton()) {
+					autoStep = 6;
+				}
+				if (ultraData.distanceRight() < 10 || ultraData.distanceLeft() < 10) {
+					autoStep = 6;
+				}
+			}
+
+			if (autoStep == 6) {
+				if (ultraFunctions.driveFowardAuton(4)) {
+					autoStep = 7;
+				}
+			}
+			if (autoStep == 7) {
+				robotDriver.stop();
+			}
+		} else if (autoMode.equals("2GB") || autoMode.equals("2gb")) {
+			if (autoStep == 0) {
+				encoder.initEncoders();
+				solenoid.set(DoubleSolenoid.Value.kForward);
+				startTime = System.currentTimeMillis();
+				autoStep = 1;
+			}
+
+			if (autoStep == 1) {
+				// TODO: Set time in robot map
+				if (System.currentTimeMillis() - startTime > 1000) {
+					solenoid.set(DoubleSolenoid.Value.kOff);
+				}
+				if (encoder.driveStraightAuton(38)) {
+					autoStep = 2;
+				}
+			}
+			if (autoStep == 2) {
+				if (pixyFunctionsGear.turnAndGoStraightAuton()) {
+					autoStep = 3;
+				}
+				if (ultraData.distanceRight() < 10 || ultraData.distanceLeft() < 10) {
+					autoStep = 3;
+				}
+			}
+
+			if (autoStep == 3) {
+				if (ultraFunctions.driveFowardAuton(4)) {
+					autoStep = 4;
+				}
+			}
+			if (autoStep == 4) {
+				robotDriver.stop();
+				startTime = System.currentTimeMillis();
+				Timer.delay(3);
+				autoStep = 5;
+			}
+			if (autoStep == 5) {
+				if (encoder.driveStraightAuton(-24)) {
+					autoStep = 6;
+					currAngle = gyro.getAngle();
+					encoder.initEncoders();
+				}
+			}
+			if (autoStep == 6) {
+				if (encoder.autonNinetyDegreeTurn(currAngle, false)) {
+					encoder.initEncoders();
+					autoStep = 7;
+				}
+			}
+			if (autoStep == 7) {
+				// TODO change number 34, this is experimental
+				if (encoder.driveStraightAuton(34)) {
+					currAngle = gyro.getAngle();
+					encoder.initEncoders();
+					autoStep = 8;
+				}
+			}
+			if (autoStep == 8) {
+				if (encoder.autonNinetyDegreeTurn(currAngle, false)) {
+					encoder.initEncoders();
+					autoStep = 9;
+				}
+			}
+			if (autoStep == 9) {
+				if (encoder.driveStraightAuton(10)) {
+					autoStep = 10;
+				}
+			}
+			if (autoStep == 10) {
+				if (ultraFunctions.selfStraight()) {
+					autoStep = 11;
+				}
+			}
+			if (autoStep == 11) {
+				if (ultraFunctions.driveFowardAuton(4)) {
+					autoStep = 12;
+				}
+			}
+			if (autoStep == 12) {
+				robotDriver.stop();
+				Timer.delay(3);
+				encoder.initEncoders();
+				autoStep = 13;
+			}
+			if (autoStep == 13) {
+				if (encoder.driveStraightAuton(-24)) {
+					autoStep = 14;
+					currAngle = gyro.getAngle();
+					encoder.initEncoders();
+				}
+			}
+			if (autoStep == 14) {
+				if (encoder.autonNinetyDegreeTurn(currAngle, false)) {
+					encoder.initEncoders();
+					autoStep = 15;
+				}
+			}
+			if (autoStep == 15) {
+				// TODO change number 34, this is a number derived from using a
+				// caliper to calculate pixels.
+				if (encoder.driveStraightAuton(34)) {
+					currAngle = gyro.getAngle();
+					encoder.initEncoders();
+					autoStep = 16;
+				}
+			}
+			if (autoStep == 16) {
+				if (encoder.autonNinetyDegreeTurn(currAngle, false)) {
+					encoder.initEncoders();
+					autoStep = 17;
+				}
+			}
+			if (autoStep == 17) {
+				if (encoder.driveStraightAuton(14)) {
+					autoStep = 18;
+				}
+			}
+			if (autoStep == 18) {
+				if (pixyFunctionsGear.turnAndGoStraightAuton()) {
+					autoStep = 19;
+				}
+				if (ultraData.distanceRight() < 10 || ultraData.distanceLeft() < 10) {
+					autoStep = 19;
+				}
+			}
+
+			if (autoStep == 19) {
+				if (ultraFunctions.driveFowardAuton(4)) {
+					autoStep = 20;
+				}
+			}
+			if (autoStep == 20) {
+				robotDriver.stop();
+			}
+		} else if (autoMode.equals("2GR") || autoMode.equals("2gr")) {
+			if (autoStep == 0) {
+				encoder.initEncoders();
+				solenoid.set(DoubleSolenoid.Value.kForward);
+				startTime = System.currentTimeMillis();
+				autoStep = 1;
+			}
+
+			if (autoStep == 1) {
+				// TODO: Set time in robot map
+				if (System.currentTimeMillis() - startTime > 1000) {
+					solenoid.set(DoubleSolenoid.Value.kOff);
+				}
+				if (encoder.driveStraightAuton(38)) {
+					autoStep = 2;
+				}
+			}
+			if (autoStep == 2) {
+				if (pixyFunctionsGear.turnAndGoStraightAuton()) {
+					autoStep = 3;
+				}
+				if (ultraData.distanceRight() < 10 || ultraData.distanceLeft() < 10) {
+					autoStep = 3;
+				}
+			}
+
+			if (autoStep == 3) {
+				if (ultraFunctions.driveFowardAuton(4)) {
+					autoStep = 4;
+				}
+			}
+			if (autoStep == 4) {
+				robotDriver.stop();
+				startTime = System.currentTimeMillis();
+				Timer.delay(3);
+				autoStep = 5;
+			}
+			if (autoStep == 5) {
+				if (encoder.driveStraightAuton(-24)) {
+					autoStep = 6;
+					currAngle = gyro.getAngle();
+					encoder.initEncoders();
+				}
+			}
+			if (autoStep == 6) {
+				if (encoder.autonNinetyDegreeTurn(currAngle, true)) {
+					encoder.initEncoders();
+					autoStep = 7;
+				}
+			}
+			if (autoStep == 7) {
+				// TODO change number 34, this is experimental
+				if (encoder.driveStraightAuton(34)) {
+					currAngle = gyro.getAngle();
+					encoder.initEncoders();
+					autoStep = 8;
+				}
+			}
+			if (autoStep == 8) {
+				if (encoder.autonNinetyDegreeTurn(currAngle, true)) {
+					encoder.initEncoders();
+					autoStep = 9;
+				}
+			}
+			if (autoStep == 9) {
+				if (encoder.driveStraightAuton(10)) {
+					autoStep = 10;
+				}
+			}
+			if (autoStep == 10) {
+				if (ultraFunctions.selfStraight()) {
+					autoStep = 11;
+				}
+			}
+			if (autoStep == 11) {
+				if (ultraFunctions.driveFowardAuton(4)) {
+					autoStep = 12;
+				}
+			}
+			if (autoStep == 12) {
+				robotDriver.stop();
+				Timer.delay(3);
+				encoder.initEncoders();
+				autoStep = 13;
+			}
+			if (autoStep == 13) {
+				if (encoder.driveStraightAuton(-24)) {
+					autoStep = 14;
+					currAngle = gyro.getAngle();
+					encoder.initEncoders();
+				}
+			}
+			if (autoStep == 14) {
+				if (encoder.autonNinetyDegreeTurn(currAngle, true)) {
+					encoder.initEncoders();
+					autoStep = 15;
+				}
+			}
+			if (autoStep == 15) {
+				// TODO change number 34, this is a number derived from using a
+				// caliper to calculate pixels.
+				if (encoder.driveStraightAuton(34)) {
+					currAngle = gyro.getAngle();
+					encoder.initEncoders();
+					autoStep = 16;
+				}
+			}
+			if (autoStep == 16) {
+				if (encoder.autonNinetyDegreeTurn(currAngle, true)) {
+					encoder.initEncoders();
+					autoStep = 17;
+				}
+			}
+			if (autoStep == 17) {
+				if (encoder.driveStraightAuton(14)) {
+					autoStep = 18;
+				}
+			}
+			if (autoStep == 18) {
+				if (pixyFunctionsGear.turnAndGoStraightAuton()) {
+					autoStep = 19;
+				}
+				if (ultraData.distanceRight() < 10 || ultraData.distanceLeft() < 10) {
+					autoStep = 19;
+				}
+			}
+
+			if (autoStep == 19) {
+				if (ultraFunctions.driveFowardAuton(4)) {
+					autoStep = 20;
+				}
+			}
+			if (autoStep == 20) {
+				robotDriver.stop();
 			}
 		}
-		// if (autoStep == 1) {
-		// if (pixyFunctionsGear.turnAndGoStraightAuton()) {
-		// autoStep = 2;
-		// }
-		// if (ultraFunctions.goBackTooClosePixyAuton()) {
-		// autoStep = 3;
-		// }
-		// }
-		// if (autoStep == 2) {
-		// if (!pixyFunctionsGear.checkIfAlignedGear()) {
-		// autoStep = 1;
-		// }
-		// if (ultraFunctions.driveFowardAuton(14)) {
-		// autoStep = 4;
-		// }
-		// }
-		// if (autoStep == 3) {
-		// if (!ultraFunctions.goBackTooClosePixyAuton()) {
-		// autoStep = 0;
-		// }
-		// }
-		// double time = 0;
-		// if (autoStep == 4) {
-		// time = System.currentTimeMillis();
-		// autoStep = 5;
-		// robotDriver.stop();
-		// }
-		// if (autoStep == 5) {
-		// if ((System.currentTimeMillis() - time) > 3000) {
-		// autoStep = 6;
-		// encoder.initEncoders();
-		// }
-		// }
-		// if (autoStep == 6) {
-		// if (encoder.driveBackwardsAuton(18)) {
-		// autoStep = 7;
-		// }
-		// }
-		// if (autoStep == 7) {
-		// if (gyro.moveDegreesAuton(90)) {
-		// autoStep = 8;
-		// encoder.initEncoders();
-		// }
-		// }
-		// if (autoStep == 8) {
-		// if (encoder.driveForwardAuton(6)) {
-		// autoStep = 9;
-		// }
-		// }
-		// if (autoStep == 9) {
-		// if (gyro.moveDegreesAuton(90)) {
-		// autoStep = 10;
-		// }
-		// }
-		// if (autoStep == 10) {
-		// if (ultraFunctions.driveFowardAuton(4)) {
-		// autoStep = 11;
-		// }
-		// }
-		// if (autoStep == 11) {
-		// robotDriver.stop();
-		// }
-		else if (autoMode.equals("R") || autoMode.equals("r")) {
-		}
-
-		// else if(autoMode.equals(arg0));
 	}
 
-	public void autonomousPeriodicState() {
-	}
-
+	/**
+	 * Runs the motors with arcade steering.
+	 */
 	@Override
-	public void teleopInit() {
+	public void operatorControl() {
 		// pixyProc.pixyTestReset();
 		// encoder.initEncoders();
 		// pixyGearProc.pixyTestReset();
-		shooterServo.set(0.0);
-		servoBoy.set(0.0);
+		gyro.resetGyro();
+		// shooterServo.set(0.0);
+		// servoBoy.set(0.0);
 		encoder.initEncoders();
-	}
+		// SmartDashboard.putNumber("Gyro Adjust", 0);
+		// SmartDashboard.putNumber("Override Angle", 0);
+		// SmartDashboard.putNumber("Turn Speed", 0);
+		counter = 0;
+		while (isOperatorControl() && isEnabled()) {
 
-	/**
-	 * This function is called periodically during operator control
-	 */
-	@Override
-	public void teleopPeriodic() {
+			relay.setDirection(Relay.Direction.kBoth);
 
-		SmartDashboard.putNumber("Gyro Angle", gyro.getAngle());
-		pixyGearProc.pixyI2CTest();
-		pixyGearProc.pixyTest();
+			// Assorted data for testing, to see if sensors are working etc.
+			SmartDashboard.putNumber("Ultra Right", ultraData.distanceRight());
+			SmartDashboard.putNumber("Ultra Left", ultraData.distanceLeft());
 
-		// if(stick.getRawButton(11)){
-		// if(stepShooter ==0){
-		// stepShooter= 1;
-		// if(shooterSpeed==2000){
-		// shooterSpeed = 4000;
-		// }else if(shooterSpeed==4000){
-		// shooterSpeed = 6000;
-		// }else{
-		// shooterSpeed=2000;
-		// }
-		//
-		// }else{
-		// stepShooter =0;
-		// }
-
-		SmartDashboard.putNumber("ultra left", ultraData.distanceLeft());
-		SmartDashboard.putNumber("ultra right", ultraData.distanceRight());
-		// pixyGearProc.xPos();
-		SmartDashboard.putNumber("servo", servo.get());
-		// // pixyGearProc.averageData(0, true);
-		//
-		// // Trigger shoots... It enables flywheel, transport and sweeper to
-		// // create flow
-		// // Thumb button spins up flywheel
-		// // Joystick buttons 3 and 4, as well as the right trigger activate
-		// the
-		// // sweeper
-		//
-
-		if (stick.getRawButton(1) || stick.getRawButton(2)) {
-			shooter.set(-.75);
-			SmartDashboard.putNumber("Power to Shooter", stick.getRawAxis(3));
-			encoder.RPMs();
-		} else {
-			shooter.set(0);
-		}
-		//// Stick button to enable the sweeper
-		if (stick.getRawButton(4) || stick.getRawButton(1) || xBox.getRawAxis(3) != 0) {
-			sweeper.set(-1);
-		} else {
-			sweeper.set(0);
-		}
-		// //
-		if (stick.getRawButton(1)) {
-			transport.set(-1);
-		} else {
-			transport.set(0);
-		}
-
-		// if (xBox.getRawButton(6)) {
-		// if (shiftStep == 0) {
-		// shiftStep = 1;
-		// if (shifter == 0) {
-		// shifter = 1;
-		// } else {
-		// shifter = 0;
-		// }
-		// }
-		// shifter = 1;
-		// } else {
-		//// shiftStep = 0;
-		// shifter =0;
-		// }
-
-		// if (xBox.getRawButton(9)) {
-		// gearShift.set(DoubleSolenoid.Value.kForward);
-		// } else {
-		// if (shifter == 1) {
-		// gearShift.set(DoubleSolenoid.Value.kReverse);
-		// } else {
-		// gearShift.set(DoubleSolenoid.Value.kOff);
-		// }
-		// }
-		// SmartDashboard.putNumber("Shifter", shifter);
-
-		if (xBox.getRawButton(3)) {
-			SmartDashboard.putString("I love robotics", "Turn me right");
-			gyro.moveDegrees(60, currAngle);
-		} else if (xBox.getRawButton(4)) {
-			SmartDashboard.putString("I love robotics", "Turn me left");
-			gyro.moveDegrees(-60, currAngle);
-
-			// TODO: fix *4 fudge factor
-		} else if (xBox.getRawButton(1)) {
-			gyro.moveDegreesAuton(180, currAngle);
-			encoder.RPMs();
-		}  else if (stick.getRawButton(9)) {
-			rightMotor.set(-.5);
-		} else if(xBox.getRawButton(6)&&xBox.getRawAxis(1)!=0){
-			if(gearLoadStep==0){
-			if(ultraFunctions.selfStraight()){
-				gearLoadStep =1;
+			// Flywheel activated when trigger or thumb button are pressed
+			if (stick.getRawButton(1) || stick.getRawButton(2)) {
+				shooter.set(-.75);
+				SmartDashboard.putNumber("Power to Shooter", stick.getRawAxis(3));
+			} else {
+				shooter.set(0);
 			}
+
+			// Stick button to enable the sweeper.
+			// Also triggers with XBox right trigger
+			if (stick.getRawButton(4) || stick.getRawButton(1) || xBox.getRawAxis(3) != 0) {
+				sweeper.set(-1);
+			} else {
+				sweeper.set(0);
 			}
-			if(gearLoadStep==1){
-				if(ultraFunctions.driveFowardAuton(1)){
-					gearLoadStep =2;
+
+			// Ball transport only active when trigger is held
+			if (stick.getRawButton(1)) {
+				transport.set(-1);
+			} else {
+				transport.set(0);
+			}
+
+			// ----------------------------------------------------------------------
+			// // TODO do not delete this code use for calibration of gyro at
+			// // competition
+			// // TODO
+			// // TODO do not delete this code use for calibration of gyro at
+			// // competition
+			// // TODO
+			// // TODO do not delete this code use for calibration of gyro at
+			// // competition
+			// // TODO
+			// //
+			// ------------------------------------------------------------------------
+			// // if(xBox.getRawButton(1)){
+			// // if(step ==0){
+			// // SmartDashboard.putNumber("Init Angle", currAngle);
+			// // encoder.initEncoders();
+			// // step =1;
+			// // }
+			// // if(step==1){
+			// // if(encoder.calibrateTurnWithGyrosAndEncoders()){
+			// // step =2;
+			// // }
+			// // if(step==2){
+			// // SmartDashboard.putNumber("Change in angle",
+			// // gyro.getAngle()-currAngle);
+			// // robotDriver.stop();
+			// // }
+			// // }
+			// // }else{
+			// // currAngle = gyro.getAngle();
+			// // step =0;
+			// // robotDriver.stop();
+			// // }
+			// //
+			// ----------------------------------------------------------------------
+			// // TODO do not delete this code use for calibration of gyro at
+			// // competition
+			// // TODO
+			// // TODO do not delete this code use for calibration of gyro at
+			// // competition
+			// // TODO
+			// // TODO do not delete this code use for calibration of gyro at
+			// // competition
+			// // TODO
+			// //
+			// ------------------------------------------------------------------------
+
+			if (xBox.getRawButton(1)) {
+				// THIS CODE FUCKIN WORKS FOR THE PIXY CENTERING
+				// HOLY SHIT WE DID IT BOYS WE REALLY FUCKIN DID IT
+
+				if (pixyFunctionsGear.turnAndGoStraightAuton()) {
+					if (ultraFunctions.driveFowardAuton(3)) {
+						robotDriver.drive(0.05, 0, 1);
+					}
 				}
 			}
-			if(gearLoadStep ==2){
-				robotDriver.stop();
-			}
-		}else if(stick.getRawButton(RobotMap.encoderTestDriveButton)){  //This is a test using button 12
-			if(step==0){
-				encoder.initEncoders();
-				step =1;
-			}
-			if(step==1){
-				if(encoder.driveStraightAuton(80)){
-					step =2;
+
+			// Pressing the X Button and moving the left stick will activate
+			// a 110 degree turn
+			else if (xBox.getRawButton(RobotMap.loaderTurnButton)) {
+				if (Math.abs(xBox.getRawAxis(RobotMap.loaderTurnAxis)) >= .25) {
+					// by reaching this point, driver pressed button and pulled
+					// stick.
+					// this is for quick turn on robot.
+					// buttons must be released for another quick turn
+					if (step == 0) {
+						currAngle = gyro.getAngle();
+						encoder.initEncoders();
+						step = 1;
+					}
+					if (step == 1) {
+						if (xBox.getRawAxis(RobotMap.loaderTurnAxis) > .25) {
+							left = true;
+						} else if (xBox.getRawAxis(RobotMap.loaderTurnAxis) < -.25) {
+							left = false;
+						}
+						if (encoder.loaderTurn(currAngle, left)) {
+							step = 2;
+						}
+						if (step == 2) {
+							robotDriver.stop();
+						}
+					}
+				} else {
+					robotDriver.stop();
+				}
+
+				// Pressing Y will invert the robot controls
+				// for easier reverse driving
+			} else if (xBox.getRawButton(RobotMap.flipperButt)) {
+				if (step == 0) {
+					step = 1;
+					if (driveMod == 1) {
+						driveMod = -1;
+					} else {
+						driveMod = 1;
+					}
 				}
 			}
-			if(step ==2){
-				robotDriver.stop();
+
+			// Defaults to manual driving. Also resets all steps and gyro
+			else {
+				gyro.resetGyro();
+				step = 0;
+				stepShooter = 0;
+				gearLoadStep = 0;
+				robotDriver.drive(xBox.getRawAxis(1) * straightMod, xBox.getRawAxis(4) * turnMod, driveMod);
 			}
-		}else if(stick.getRawButton(RobotMap.enableRumbleButton)){
-			xBox.setRumble(RumbleType.kRightRumble, 1);
-			xBox.setRumble(RumbleType.kLeftRumble, 1);
-		}else{
-			xBox.setRumble(RumbleType.kRightRumble, 0);
-			xBox.setRumble(RumbleType.kLeftRumble, 0);
-			step = 0;
-			stepShooter = 0;
-			gearLoadStep =0;
-			currAngle = gyro.getAngle();
-			robotDriver.drive(xBox.getRawAxis(1) * straightMod, xBox.getRawAxis(4) * turnMod, driveMod);
-		}
-		
-		
-		// if (xBox.getRawButton(4)) {
-		// if (step == 0) {
-		// step = 1;
-		// if (flipped) {
-		// flipped = false;
-		// } else {
-		// flipped = true;
-		// }
-		// }
-		// } else {
-		// step = 0;
-		// }
-		// if (flipped) {
-		// driveMod = -1;
-		// } else {
-		// driveMod = 1;
-		// }
-		//
-		// //
-		// //
-		// // // // Reads "twist" of the joystick to set the Azimuth of shooter
-		// //
-		if (Math.abs(stick.getZ()) > .4) {
-			turret.set(stick.getZ() / 6);
-		} else {
-			turret.set(0);
-		}
-		//
-		// //
-		// // // Set Linear servo to full extension or full retraction
-		//
-		if (stick.getPOV(0) == 0) {
-			shooterServo.increment(-1);
-		}
 
-		else if (stick.getPOV(0) == 180) {
-			shooterServo.increment(1);
-		}
+			// Watkins conditioning apparatus
+			if (stick.getRawButton(RobotMap.enableRumbleButton)) {
+				xBox.setRumble(RumbleType.kRightRumble, 1);
+				xBox.setRumble(RumbleType.kLeftRumble, 1);
+			} else {
+				xBox.setRumble(RumbleType.kRightRumble, 0);
+				xBox.setRumble(RumbleType.kLeftRumble, 0);
+			}
 
-		if (stick.getRawButton(8)) {
-			shooterServo.set(1.0);
-		}
-		if (stick.getRawButton(7)) {
-			shooterServo.set(0.0);
-		}
+			// Reads "twist" of the joystick to set the Azimuth of shooter
+			if (Math.abs(stick.getZ()) > .4) {
+				turret.set(stick.getZ() / 6);
+			} else {
+				turret.set(0);
+			}
 
-		if (stick.getRawButton(5)) {
-			servoBoy.increment(-1);
-		}
-		if (stick.getRawButton(3)) {
-			servoBoy.increment(1);
-		}
+			// TODO: We've been having problems where we can only move one servo
+			// at a time
+			// All servo inputs maniplate just one servo
+			// Need to get to the bottom of that and find out how we can move
+			// two servos separately
 
-		// XBox trigger (left) to enable climber
-//		if (stick.getRawButton(6)) {
-//			climber.set(1);
-//		} else if (xBox.getRawAxis(2) != 0) {
-//			climber.set(xBox.getRawAxis(2));
-//		} else {
-//			climber.set(0);
-//		}
-		if (stick.getRawButton(6)) {
-			double current = pdp.getCurrent(RobotMap.climberChannel);
-			climber.set(1);
-		} else if (xBox.getRawAxis(2) != 0) {
-			climber.set(xBox.getRawAxis(2));
-		} else {
-			climber.set(0);
+			// Manipulates the servo up or down
+			if (stick.getPOV(0) == 0) {
+				shooterServo.increment(-1);
+			}
+
+			else if (stick.getPOV(0) == 180) {
+				shooterServo.increment(1);
+			}
+
+			if (stick.getRawButton(5)) {
+				servoBoy.increment(-1);
+			}
+			if (stick.getRawButton(3)) {
+				servoBoy.increment(1);
+			}
+
+			// Should set the servos to full extension and retraction
+			if (stick.getRawButton(8)) {
+				shooterServo.set(1.0);
+			}
+			if (stick.getRawButton(7)) {
+				shooterServo.set(0.0);
+			}
+
+			// Activates the climber, giving the Operator stick priority
+			if (stick.getRawButton(6)) {
+				double current = pdp.getCurrent(RobotMap.climberChannel);
+				climber.set(1);
+			} else if (xBox.getRawAxis(2) != 0) {
+				climber.set(xBox.getRawAxis(2));
+			} else {
+				climber.set(0);
+			}
+
 		}
 
 	}
 
 	/**
-	 * This function is called periodically during test mode
+	 * Runs during test mode
 	 */
 	@Override
-	public void testPeriodic() {
-		if (first) {
-			first = false;
-			pixyFunctionsGear.alignGearPegTest();
-		}
+	public void test() {
 
 	}
 }

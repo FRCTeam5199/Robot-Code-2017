@@ -16,22 +16,14 @@ public class RobotDrive {
 	// mode.
 	public static void drive(double Y, double X, double driveMod) {
 		rightMotor.set((Y + X) * driveMod);
-		leftMotor.set((((Y * -1) + X) * driveMod) *1.4);
+		leftMotor.set((((Y * -1) + X) * driveMod));
 	}
-
-	// Another idea using two sticks, but not planned to be used.
-	public static void driveJS(double J1, double J2, double driveMod) {
-		leftMotor.set(J1);
-		rightMotor.set(J2);
-	}
-
 	// May be useful for auton or gyro turning.
 	public static void deadTurn(double X, double driveMod) {
 		leftMotor.set(driveMod * (X) * 1.2);
 		rightMotor.set(driveMod * X);
 
 	}
-
 	// Useful for autonomous.
 	public static void stop() {
 		leftMotor.set(0);
