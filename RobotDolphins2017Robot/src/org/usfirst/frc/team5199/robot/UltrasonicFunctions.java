@@ -112,9 +112,9 @@ public class UltrasonicFunctions {
 	public static boolean driveFowardAuton( int distance) {
 		if (ultraData.ultraAverage() > distance) {
 			if (ultraData.ultraAverage()  > (distance + 6)) {
-				robot.drive(-.2, 0, 1);
+				robot.drive(-.3, 0, 1);
 			}else {
-					robot.drive(-.1, 0, 1);
+					robot.drive(-.2, 0, 1);
 				}
 			}
 		if(ultraData.ultraAverage()<distance){
