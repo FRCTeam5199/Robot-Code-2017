@@ -18,26 +18,17 @@ public class EncoderShooterFunctions {
 		shooterMotor = shooter;
 		turretMotor = turret;
 		
-		encoderDIOShooter = new Encoder(RobotMap.encoderShooterDIOA, RobotMap.encoderShooterDIOB, false,
-				Encoder.EncodingType.k4X);
-		encoderDIOShooter.reset();
-		encoderDIOShooter.setDistancePerPulse(RobotMap.inchesPerRotationShooter);
-		
 		 turretMotor.reset();
 		 turretMotor.reverseSensor(false);
 		 turretMotor.setFeedbackDevice(FeedbackDevice.QuadEncoder);
 		 turretMotor.configEncoderCodesPerRev(1024);
-		 turretMotor.setPosition(0);
-		 shooterMotor.changeControlMode(TalonControlMode.Speed);
-			controller = new PIDController(0.1, 0.001, 0, encoderDIOShooter, shooterMotor);
-			controller.setInputRange(0, 12000);
-			encoderDIOShooter.setPIDSourceType(PIDSourceType.kRate);
-			controller.enable();
+//		 turretMotor.setPosition(0);
+			
 
 	}
 	//MUST be called on robot startup
 	public static void initShooterEncoders(){
-		turretMotor.setPosition(0);
+//		turretMotor.setPosition(0);
 		encoderDIOShooter.reset();
 		encoderDIOShooter.setDistancePerPulse(RobotMap.inchesPerRotationShooter);
 	}
@@ -48,33 +39,8 @@ public class EncoderShooterFunctions {
 	public static void displayRpmShooterInfor(){
 		SmartDashboard.putNumber("Shooter Data",encoderDIOShooter.getDistance());
 	}
-	public static boolean setShooterSpeed(int rpms) {
-		// TODO change the value of 50 to another value
-		double rate = encoderDIOShooter.getRate() * 60;
-		if (Math.abs(rpms - rate) < 50) {
-			return true;
-		} else {
-			double power = shooterMotor.get();
-			if (Math.abs(power) != 1) {
-				if ((rpms - rate) > 0) {
-					shooterMotor.set(shooterMotor.get() + .01);
-				} else {
-					shooterMotor.set(shooterMotor.get() - .01);
-				}
-				return false;
-			}
-			return true;
-		}
-	}
-	public static void setShooterSpeed2(int rpms) {
-		// TODO change the value of 50 to another value
-		//replace with PID constants found
-		//maximum change in volts per second
-		
-		controller.setSetpoint(rpms);
-	}
-	public static void zeroTurret() {
-		while (Math.abs(turretMotor.getPosition()) > 500) {
+ 	public static boolean zeroTurret() {
+		if (Math.abs(turretMotor.getPosition()) > 500) {
 			if (turretMotor.getPosition() > 0) {
 				if (turretMotor.getPosition() > 40000) {
 					turretMotor.set(-.5);
@@ -92,8 +58,10 @@ public class EncoderShooterFunctions {
 					turretMotor.set(-.15);
 				}
 			}
+			return false;
 		}
 		turretMotor.set(0);
+		return true;
 	}
 
 	public static boolean checkLimits() {

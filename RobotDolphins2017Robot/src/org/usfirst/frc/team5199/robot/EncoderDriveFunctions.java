@@ -59,6 +59,8 @@ public class EncoderDriveFunctions {
 		double adjustL = 1, adjustR = 1;
 		rightDistance = -encoderDIORight.getDistance() / 120;
 		leftDistance = encoderDIOLeft.getDistance() / 120;
+		SmartDashboard.putNumber("Distance Right Encoder", rightDistance);
+		
 
 		if (EnableDriveStraightCompensation) {
 
@@ -87,16 +89,15 @@ public class EncoderDriveFunctions {
 			}
 		}
 		sign = (distanceForward >= 0) ? 1 : -1;
-
-		if (Math.abs(rightDistance) < Math.abs(distanceForward) - (24)) {
-
-			rightMotor.set(-1 * .8 * sign * adjustR);
+		
+		if (Math.abs(rightDistance) < Math.abs(distanceForward) - (8)) {
+			rightMotor.set(-1 * .4 * sign * adjustR);
 		} else {
 			rightComplete = true;
 		}
 
-		if (Math.abs(leftDistance) < Math.abs(distanceForward) - (24)) {
-			leftMotor.set(1 * .8 * sign * adjustL);
+		if (Math.abs(leftDistance) < Math.abs(distanceForward) - (8)) {
+			leftMotor.set(1 * .4 * sign * adjustL);
 		} else {
 			leftComplete = true;
 		}
@@ -182,7 +183,7 @@ public class EncoderDriveFunctions {
 		rightDistance = Math.abs(encoderDIORight.getDistance() / 120);
 		leftDistance  = Math.abs(encoderDIOLeft.getDistance() / 120);
 		double angle  = gyro.getAngle();
-		// SmartDashboard.putNumber("Gyro Angle",angle);
+		 SmartDashboard.putNumber("Gyro Angle",angle);
 		// SmartDashboard.putNumber("initial angle plus turn amount", Math.abs(initialAngle)+angleTurn);
 		
 		if (Math.abs(angle)<(Math.abs(Math.abs(initialAngle)+angleTurn ))+ offSet) {

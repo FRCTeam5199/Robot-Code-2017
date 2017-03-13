@@ -8,9 +8,11 @@ public class Pixy {
 	private I2C pixyBus;
 	private short currentWord;
 	private short lastWord;
+	public int address;
 
 	public Pixy(int PIXY_ADDRESS) {
 		pixyBus = new I2C(I2C.Port.kOnboard, PIXY_ADDRESS);
+		address = PIXY_ADDRESS;
 		currentWord = (short) 0x0000;
 		lastWord = (short) 0x0000;
 	}

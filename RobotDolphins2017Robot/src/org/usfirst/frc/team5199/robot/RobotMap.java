@@ -21,13 +21,13 @@ public class RobotMap {
 	public static int rightMotor = 0; // pwm	
 	public static int leftMotor = 1; // pwm 
 	public static int intake = 2; // pwm
-	public static int shooterServo2 = 3; //pwm
+	public static int shooterServo2 = 9; //pwm
 	public static int climber = 7; // pwm
 	public static int transport = 8; // pwm
-	public static int shooterServo = 9; // pwm
+	public static int shooterServo = 3; // pwm
 	
-	public static int shooter = 0; // CAN Bus
 	public static int turret = 1; // CAN Bus
+	public static int shooter = 0; // CAN Bus
 	
 	public static int xBoxPort = 0; // computerUsb
 	public static int joyStickPort = 1; // computerUsb
@@ -45,8 +45,8 @@ public class RobotMap {
 	public static int encoderLeftDIOB = 5; // DIO
 	public static int encoderRightDIOA = 6; // DIO
 	public static int encoderRightDIOB = 7; // DIO
-	public static int encoderShooterDIOA = 8; //DIO
-	public static int encoderShooterDIOB = 9; //DIO
+	public static int encoderShooterDIOA = 9; //DIO
+	public static int encoderShooterDIOB = 10; //DIO
 
 	public static int usbCamera1 = 0; // RoboRio usb
 	public static int usbCamera2 = 1; // RoboRio usb
@@ -98,6 +98,9 @@ public class RobotMap {
 	public static double driveForwardEncoderCompensation = .05; //Allows 5% per inch off
 	public static double driveForwardEncoderLimit = .7; //Allows up to 30% compensation, must be less than <1
 	
+	
+	public static double servoLowPos = 0.5;
+	
 	//The loader turn target is 110 degrees. The turn is fast (power = .8)
 	//Do not increase power because we need head room for rotation compensation
 	//There is a lot of overshoot, which is why it is set to 75 degrees
@@ -111,11 +114,11 @@ public class RobotMap {
 	//These values are determined with a battery above 12.2 volts on concrete floor 
 	public static double autonSixtyTurnOffSetRight  = -9;
 	public static double autonSixyTurnOffSetLeft 	= -11;
-	public static double autonSixtyTurnSpeed = .4;
+	public static double autonSixtyTurnSpeed = .65;
 	
 	public static double autonNinetyTurnOffSetRight = -14;
 	public static double autonNinetyTurnOffSetLeft = -14;
-	public static double autonNinetyTurnSpeed = .4;
+	public static double autonNinetyTurnSpeed = .65;
 	  
 	//Button Map
 	//Xbox Controller Map
@@ -124,13 +127,9 @@ public class RobotMap {
 	public static int loaderTurnAxis =0;
 	public static int flipperButt = 4;
 	public static int ultraForwardButton =1;
+	public static int gearSquareButt = 2;
 	//Unused Buttons:
-	/*
-	 * left Bumper
-	 * right bumper
-	 * left trigger
-	 * right trigger
-	 */
+	
 	//Joystick Controller Map
 	public static int shootButton = 1;
 	public static int transportButton =2;
@@ -139,7 +138,10 @@ public class RobotMap {
 	public static int highServoButton = 5;
 	public static int lowServoButton =6;
 	public static int turretButton = 7; //axis not a button
-	public static int enableRumbleButton =11;
+	public static int enableRumbleButton =8;
+	public static int hopperShootButton = 7;
+	public static int closePegShootButton = 9;
+	public static int middlePegShootButton = 11;
 	public static int encoderTestDriveButton =12;
 	/*
 	 * Joystick
