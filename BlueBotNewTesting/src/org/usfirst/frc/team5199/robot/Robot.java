@@ -39,7 +39,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  */
 public class Robot extends SampleRobot {
 	int step = 0;
-	Victor right = new Victor(0), left = new Victor(1), turret = new Victor(2);
+	Victor right = new Victor(0), left = new Victor(1), turret = new Victor(4);
 	Joystick stick = new Joystick(1);
 	Joystick xBox = new Joystick(0);
 	Relay exampleRelay = new Relay(0);
@@ -49,14 +49,15 @@ public class Robot extends SampleRobot {
 	int PWMSheez = 0;
 	Encoder Testarino = new Encoder(4, 3, false, Encoder.EncodingType.k4X);
 	double EncoderNum, count = 0;
-	CANTalon JagMan = new CANTalon(1);
+//	Jaguar JagMan = new Jaguar(4);
+	Victor JagMan = new Victor(2);
 	double JagPow = 0;
 	Pixy pixy = new Pixy(0x51);
 	PixyProcess pixySheez = new PixyProcess(pixy);
 	PixyFunctions pixyFunctions = new PixyFunctions(pixy, turret);
 	RobotDrive Driver = new RobotDrive(right, left);
 	boolean shooting = false;
-	public static final int ultrasonicArraySize = 85;
+	public static final int ultrasonicArraySize = 100;
 	public static boolean firstBufferRight = true;
 	public static double sumBufferRight = 0;
 	public static int counterRight = 0;
@@ -67,7 +68,7 @@ public class Robot extends SampleRobot {
 
 	@Override
 	public void robotInit() {
-		CameraServer.getInstance().startAutomaticCapture();
+//		CameraServer.getInstance().startAutomaticCapture();
 		distanceArrayRight = new Double[ultrasonicArraySize];
 		for (int i = 0; i < ultrasonicArraySize; i++) {
 			distanceArrayRight[i] = 0.0;
@@ -119,7 +120,7 @@ public class Robot extends SampleRobot {
 			if (stick.getRawButton(4)) {
 				pixyFunctions.alignShooterX();
 			} else if (Math.abs(stick.getZ()) > .15) {
-				turret.set(stick.getZ()/2 * stick.getThrottle());
+				turret.set(stick.getZ() / 2 * stick.getThrottle());
 				SmartDashboard.putNumber("Stick Turn", stick.getZ() / stick.getThrottle());
 			} else {
 				turret.set(0);
@@ -150,51 +151,52 @@ public class Robot extends SampleRobot {
 				} else if (AVG < 2500) {
 					JagMan.set(.7);
 				} else if (AVG < 2700) {
-					JagMan.set(.57);
+					JagMan.set(.63);
 				} else if (AVG < 3200) {
-					JagPow += 0.0003;
-					JagMan.set(JagPow + .57);
+					JagPow += 0.0001;
+					JagMan.set(JagPow + .63);
 				} else {
-					JagMan.set(.57);
-					JagPow -= 0.0001;
+					JagMan.set(.63);
+					JagPow -= 0.0002;
 				}
 			} else if (stick.getRawButton(7)) {
 				// For the boiler hopper position
 				if (AVG < 1000) {
 					JagMan.set(1);
 				} else if (AVG < 1500) {
-					JagMan.set(.85);
+					JagMan.set(.69);
 				} else if (AVG < 2000) {
-					JagMan.set(.7);
+					JagMan.set(.5);
 				} else if (AVG < 2500) {
-					JagMan.set(.59);
+					JagMan.set(.32);
 				} else if (AVG < 2900) {
-					JagPow += 0.0003;
-					JagMan.set(JagPow + .59);
-				} else {
-					JagMan.set(.59);
-					JagPow -= 0.0001;
+					JagPow += 0.000001;
+					JagMan.set(JagPow + .31);
+				}else {
+					JagPow -= 0.000001;
+					JagMan.set(JagPow + .31);
 				}
+				SmartDashboard.putNumber("Jag Power", JagPow + .31);
+
 			} else if (stick.getRawButton(11)) {
 				// For the center gear position
-				if (AVG < 2000) {
-					
+				if (AVG < 1500) {
 					JagMan.set(1);
-				} else if (AVG < 2500) {
+				} else if (AVG < 2000) {
 					JagMan.set(.9);
-				} else if (AVG < 3000) {
+				} else if (AVG < 2500) {
 					JagMan.set(.8);
-				} else if (AVG < 3300) {
-					JagMan.set(.64);
-				} else if (AVG < 3420) {
-					JagPow += 0.0004;
-					JagMan.set(JagPow + .64);
+				} else if (AVG < 3000) {
+					JagMan.set(.67);
+				} else if (AVG < 3555) {
+					JagPow += 0.0001;
+					JagMan.set(JagPow + .67);
 				} else {
-					JagMan.set(.64);
-					JagPow -= 0.0001;
+					JagMan.set(.67);
+					JagPow -= 0.0002;
 				}
 			} else if (stick.getRawButton(2)) {
-				JagMan.set(.5);
+				JagMan.set(.3);
 			} else {
 				JagMan.set(0);
 				JagPow = 0;
@@ -258,5 +260,17 @@ public class Robot extends SampleRobot {
 		}
 
 		return (result);
+	}
+
+	public double EncoderAVG2() {
+		if(System.currentTimeMillis() - time > 250){
+			EncoderNum = 0;
+			count = 0;
+			time = System.currentTimeMillis();
+		}
+		EncoderNum += Testarino.getRate();
+		count ++;
+
+		return (EncoderNum/count);
 	}
 }
