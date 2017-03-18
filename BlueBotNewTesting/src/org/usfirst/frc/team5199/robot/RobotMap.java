@@ -67,7 +67,7 @@ public class RobotMap {
 	public static int pixyGearDataBuffer = 10; // in pixels for the gear PixyCam
 	public static int pixyShooterDistanceOff = 5;// in pixels for the shooter
 													// Pixycam
-	public static int pixyShooterDataBuffer = 3; // in pixels for the shooter
+	public static int pixyShooterDataBuffer = 5; // in pixels for the shooter
 													// Pixycam
 
 	public static double inchesPerRotation = 4 * Math.PI; // for 4 inch wheels
