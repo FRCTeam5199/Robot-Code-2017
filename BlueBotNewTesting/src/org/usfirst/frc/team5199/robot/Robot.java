@@ -38,6 +38,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  * instead if you're new.ss
  */
 public class Robot extends SampleRobot {
+	DataBank bank = new DataBank();
 	int step = 0;
 	Victor right = new Victor(0), left = new Victor(1);
 	Jaguar turret = new Jaguar(4);
@@ -46,18 +47,13 @@ public class Robot extends SampleRobot {
 	Relay exampleRelay = new Relay(0);
 	boolean lightOn = false;
 	UltrasonicFunctions ultraFunctions;
-	EncoderDriveFunctions driveEncoders;
-	long time = System.currentTimeMillis();
 	// Servo pwmLED = new Servo(8);
 	int PWMSheez = 0;
-	Encoder Testarino = new Encoder(4, 3, false, Encoder.EncodingType.k4X);
 	double EncoderNum, count = 0;
 	// Jaguar JagMan = new Jaguar(4);
 	Victor JagMan = new Victor(2);
 	double JagPow = 0;
-	private Pixy pixyGear, pixyShooter;
 	private Relay relay;
-	private PixyProcess pixyGearProc, pixyShooterProc;
 	private PixyFunctions pixyGearFunc, pixyShooterFunc;
 	RobotDrive Driver = new RobotDrive(right, left);
 	boolean shooting = false;
@@ -66,28 +62,22 @@ public class Robot extends SampleRobot {
 	public static double sumBufferRight = 0;
 	public static int counterRight = 0;
 	public static Double[] distanceArrayRight;
+	
 
 	public Robot() {
 	}
 
 	@Override
 	public void robotInit() {
-		pixyGear = new Pixy(0x51);
-		pixyGearProc = new PixyProcess(pixyGear);
-		pixyShooter = new Pixy(0x53);
-		pixyShooterProc = new PixyProcess(pixyShooter);
-		 pixyGearFunc = new PixyFunctions(pixyGear, ultraFunctions,
-		 driveEncoders, Driver);
-		pixyShooterFunc = new PixyFunctions(pixyShooter, turret);
+		pixyGearFunc = new PixyFunctions(bank.pixyGear, ultraFunctions, bank.driveEncoders, Driver);
+		pixyShooterFunc = new PixyFunctions(bank.pixyShooter, turret);
 		// CameraServer.getInstance().startAutomaticCapture();
 		distanceArrayRight = new Double[ultrasonicArraySize];
 		for (int i = 0; i < ultrasonicArraySize; i++) {
 			distanceArrayRight[i] = 0.0;
 		}
 		JagPow = 0;
-		time = System.currentTimeMillis();
-		Testarino.reset();
-		Testarino.setDistancePerPulse(RobotMap.inchesPerRotation / 2);
+		bank.time = System.currentTimeMillis();
 
 	}
 
@@ -113,23 +103,22 @@ public class Robot extends SampleRobot {
 	@Override
 	public void operatorControl() {
 		double AVG = 0;
-		time = System.currentTimeMillis();
+		bank.time = System.currentTimeMillis();
 		lightOn = false;
-		pixyShooterProc.pixyTestReset();
-		pixyGearProc.pixyTestReset();
+		bank.pixyShooterProc.pixyTestReset();
+		bank.pixyGearProc.pixyTestReset();
 		while (isOperatorControl() && isEnabled()) {
-			pixyShooterProc.pixyShooterI2CTest();
-			pixyShooterProc.pixyShooterTest();
-			pixyGearProc.pixyGearI2CTest();
-			pixyGearProc.pixyGearTest();
+			bank.pixyShooterProc.pixyShooterI2CTest();
+			bank.pixyShooterProc.pixyShooterTest();
+			bank.pixyGearProc.pixyGearI2CTest();
+			bank.pixyGearProc.pixyGearTest();
 			if (xBox.getRawButton(1)) {
-				if(pixyGearFunc.turnAndGoStraightAuton()){
+				if (pixyGearFunc.turnAndGoStraightAuton()) {
 					Driver.stop();
 				}
 			} else {
 				Driver.drive(xBox.getRawAxis(1) * -1, xBox.getRawAxis(4) * .6, 1);
 			}
-			AVG = this.EncoderAVG();
 			if (stick.getRawButton(3)) {
 				PWMSheez -= 10;
 			}
@@ -257,39 +246,4 @@ public class Robot extends SampleRobot {
 	public void test() {
 	}
 
-	public double EncoderAVG() {
-
-		double range = Testarino.getRate();
-		double result;
-
-		sumBufferRight += range - distanceArrayRight[counterRight];
-
-		distanceArrayRight[counterRight++] = range;
-
-		if (counterRight == ultrasonicArraySize) {
-			firstBufferRight = false;
-			counterRight = 0;
-		}
-
-		if (firstBufferRight) {
-			result = sumBufferRight / counterRight;
-
-		} else {
-			result = sumBufferRight / ultrasonicArraySize;
-		}
-
-		return (result);
-	}
-
-	public double EncoderAVG2() {
-		if (System.currentTimeMillis() - time > 250) {
-			EncoderNum = 0;
-			count = 0;
-			time = System.currentTimeMillis();
-		}
-		EncoderNum += Testarino.getRate();
-		count++;
-
-		return (EncoderNum / count);
-	}
 }
