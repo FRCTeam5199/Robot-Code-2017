@@ -40,35 +40,40 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 public class Robot extends SampleRobot {
 	DataBank bank = new DataBank();
 	int step = 0;
-	Victor right = new Victor(0), left = new Victor(1);
-	Jaguar turret = new Jaguar(4);
+	public Victor right = bank.right, left = bank.left;
+	CANTalon turret = new CANTalon(0);
 	Joystick stick = new Joystick(1);
 	Joystick xBox = new Joystick(0);
 	Relay exampleRelay = new Relay(0);
+	GyroFunctions gyro = new GyroFunctions(right, left);
 	boolean lightOn = false;
 	UltrasonicFunctions ultraFunctions;
 	// Servo pwmLED = new Servo(8);
 	int PWMSheez = 0;
 	double EncoderNum, count = 0;
 	// Jaguar JagMan = new Jaguar(4);
-	Victor JagMan = new Victor(2);
+	CANTalon JagMan = new CANTalon(1);
 	double JagPow = 0;
 	private Relay relay;
 	private PixyFunctions pixyGearFunc, pixyShooterFunc;
 	RobotDrive Driver = new RobotDrive(right, left);
 	boolean shooting = false;
+	public static int counter = 0;
+	public static long start = 0;
 	public static final int ultrasonicArraySize = 100;
 	public static boolean firstBufferRight = true;
 	public static double sumBufferRight = 0;
 	public static int counterRight = 0;
 	public static Double[] distanceArrayRight;
-	
+	public static boolean leftTurn = true;
+	int autoStep = 0;
 
 	public Robot() {
 	}
 
 	@Override
 	public void robotInit() {
+		ultraFunctions = new UltrasonicFunctions(bank.ultraData, right, left);
 		pixyGearFunc = new PixyFunctions(bank.pixyGear, ultraFunctions, bank.driveEncoders, Driver);
 		pixyShooterFunc = new PixyFunctions(bank.pixyShooter, turret);
 		// CameraServer.getInstance().startAutomaticCapture();
@@ -78,6 +83,7 @@ public class Robot extends SampleRobot {
 		}
 		JagPow = 0;
 		bank.time = System.currentTimeMillis();
+		SmartDashboard.putNumber("Pixy Alignment Subtraction", 160);
 
 	}
 
@@ -94,6 +100,60 @@ public class Robot extends SampleRobot {
 	 */
 	@Override
 	public void autonomous() {
+		autoStep = 0;
+		double AVG = 0;
+		while (isAutonomous() && isEnabled()) {
+			if(autoStep >= 1){
+				pixyShooterFunc.alignShooterX();
+			}
+			
+			AVG = bank.shooterRPM();
+			// For the close gear peg position
+			if (AVG < 1000) {
+				JagMan.set(1);
+			} else if (AVG < 1500) {
+				JagMan.set(.85);
+			} else if (AVG < 2000) {
+				JagMan.set(.6);
+			} else if (AVG < 2300) {
+				JagMan.set(.49);
+			} else if (AVG < 3350) {
+				JagPow += 0.00025;
+				JagMan.set(JagPow + .49);
+			} else {
+				JagMan.set(.49);
+				JagPow -= 0.0001;
+			}
+			
+			if (autoStep == 0) {
+				Driver.drive(.3, 0, 1);
+				Timer.delay(3.75);
+				Driver.stop();
+				Timer.delay(.5);
+				autoStep = 1;
+			}
+			if (autoStep == 1) {
+				gyro.moveDegreesAuton(-60, 0);
+				Timer.delay(.5);
+				autoStep = 2;
+
+			}
+			if (autoStep == 2) {
+				if (bank.ultraDistanceLeft() > 6) {
+					if (pixyGearFunc.turnAndGoStraightAuton()) {
+						Driver.drive(0.4, 0, 1);
+					}
+				} else {
+					if (ultraFunctions.driveFowardAuton(3)) {
+						autoStep = 3;
+					}
+				}
+			}
+			if (autoStep == 3) {
+				Driver.stop();
+			}
+
+		}
 
 	}
 
@@ -107,18 +167,63 @@ public class Robot extends SampleRobot {
 		lightOn = false;
 		bank.pixyShooterProc.pixyTestReset();
 		bank.pixyGearProc.pixyTestReset();
+		start = System.currentTimeMillis();
+		double currAngle = 0.0;
 		while (isOperatorControl() && isEnabled()) {
+			SmartDashboard.putNumber("Gyro", gyro.gyro.getAngle());
+			AVG = bank.shooterRPM();
+			// AVG = bank.flywheel.getRate();
 			bank.pixyShooterProc.pixyShooterI2CTest();
 			bank.pixyShooterProc.pixyShooterTest();
 			bank.pixyGearProc.pixyGearI2CTest();
 			bank.pixyGearProc.pixyGearTest();
+			SmartDashboard.putNumber("Left Ultra", bank.ultraDistanceLeft());
+			SmartDashboard.putNumber("Right Ultra", bank.ultraDistanceRight());
 			if (xBox.getRawButton(1)) {
-				if (pixyGearFunc.turnAndGoStraightAuton()) {
-					Driver.stop();
+				if (bank.ultraDistanceLeft() > 6) {
+					if (pixyGearFunc.turnAndGoStraightAuton()) {
+						Driver.drive(0.4, 0, 1);
+					}
+				} else {
+					ultraFunctions.driveFowardAuton(3);
 				}
-			} else {
+
+			} else if (xBox.getRawButton(RobotMap.loaderTurnButton)) {
+				gyro.moveDegreesAuton(-60, 0);
+				// if (Math.abs(xBox.getRawAxis(RobotMap.loaderTurnAxis)) >=
+				// .25) {
+				// // by reaching this point, driver pressed button and pulled
+				// // stick.
+				// // this is for quick turn on robot.
+				// // buttons must be released for another quick turn
+				// if (step == 0) {
+				// currAngle = gyro.getAngle();
+				// bank.driveEncoders.initEncoders();
+				// step = 1;
+				// }
+				// if (step == 1) {
+				// if (xBox.getRawAxis(RobotMap.loaderTurnAxis) > .25) {
+				// leftTurn = true;
+				// } else if (xBox.getRawAxis(RobotMap.loaderTurnAxis) < -.25) {
+				// leftTurn = false;
+				// }
+				// // if (driveEncoders.loaderTurn(currAngle, left)){
+				// if (bank.driveEncoders.autonSixtyDegreeTurn(currAngle,
+				// !leftTurn)) {
+				// step = 2;
+				// }
+				// if (step == 2) {
+				// Driver.stop();
+				// }
+				// }
+			}
+			// Pressing Y will invert the robot controls
+			// for easier reverse driving
+			else {
+				gyro.resetGyro();
 				Driver.drive(xBox.getRawAxis(1) * -1, xBox.getRawAxis(4) * .6, 1);
 			}
+
 			if (stick.getRawButton(3)) {
 				PWMSheez -= 10;
 			}
@@ -142,52 +247,53 @@ public class Robot extends SampleRobot {
 			// else{
 			// step = 0;
 			// }
-			if (stick.getRawButton(11)) {
-				xBox.setRumble(RumbleType.kRightRumble, 1);
-				xBox.setRumble(RumbleType.kLeftRumble, 1);
-			} else {
-				xBox.setRumble(RumbleType.kRightRumble, 0);
-				xBox.setRumble(RumbleType.kLeftRumble, 0);
-			}
+			// if (stick.getRawButton(11)) {
+			// xBox.setRumble(RumbleType.kRightRumble, 1);
+			// xBox.setRumble(RumbleType.kLeftRumble, 1);
+			// } else {
+			// xBox.setRumble(RumbleType.kRightRumble, 0);
+			// xBox.setRumble(RumbleType.kLeftRumble, 0);
+			// }
 
 			if (stick.getRawButton(9)) {
 				// For the close gear peg position
 				if (AVG < 1000) {
 					JagMan.set(1);
-				} else if (AVG < 2000) {
+				} else if (AVG < 1500) {
 					JagMan.set(.85);
-				} else if (AVG < 2500) {
-					JagMan.set(.7);
-				} else if (AVG < 2700) {
-					JagMan.set(.63);
-				} else if (AVG < 3200) {
-					JagPow += 0.0001;
-					JagMan.set(JagPow + .63);
+				} else if (AVG < 2000) {
+					JagMan.set(.6);
+				} else if (AVG < 2300) {
+					JagMan.set(.49);
+				} else if (AVG < 3350 + (100 * stick.getThrottle())) {
+					JagPow += 0.00025;
+					JagMan.set(JagPow + .49);
 				} else {
-					JagMan.set(.63);
-					JagPow -= 0.0002;
+					JagMan.set(.49);
+					JagPow -= 0.0001;
 				}
 			} else if (stick.getRawButton(7)) {
 				// For the boiler hopper position
 				if (AVG < 1000) {
 					JagMan.set(1);
 				} else if (AVG < 1500) {
-					JagMan.set(.69);
+					JagMan.set(.85);
 				} else if (AVG < 2000) {
-					JagMan.set(.5);
+					JagMan.set(.8);
 				} else if (AVG < 2500) {
-					JagMan.set(.32);
-				} else if (AVG < 2900) {
-					JagPow += 0.000001;
-					JagMan.set(JagPow + .31);
+					JagMan.set(.66);
+				} else if (AVG < 3000) {
+					JagPow += 0.00001;
+					JagMan.set(JagPow + .66);
 				} else {
-					JagPow -= 0.000001;
-					JagMan.set(JagPow + .31);
+					JagPow -= 0.000005;
+					JagMan.set(.66);
 				}
-				SmartDashboard.putNumber("Jag Power", JagPow + .31);
+				SmartDashboard.putNumber("Jag Power", JagPow + .66);
 
 			} else if (stick.getRawButton(11)) {
 				// For the center gear position
+				// Last calibrated 3/19/17 at Code Orange approx 4:30
 				if (AVG < 1500) {
 					JagMan.set(1);
 				} else if (AVG < 2000) {
@@ -195,13 +301,13 @@ public class Robot extends SampleRobot {
 				} else if (AVG < 2500) {
 					JagMan.set(.8);
 				} else if (AVG < 3000) {
-					JagMan.set(.67);
-				} else if (AVG < 3555) {
-					JagPow += 0.0001;
-					JagMan.set(JagPow + .67);
+					JagMan.set(.52);
+				} else if (AVG < 3575 + (100 * stick.getThrottle())) {
+					JagPow += 0.0003;
+					JagMan.set(JagPow + .52);
 				} else {
-					JagMan.set(.67);
-					JagPow -= 0.0002;
+					JagMan.set(.52);
+					JagPow -= 0.0001;
 				}
 			} else if (stick.getRawButton(2)) {
 				JagMan.set(.3);
@@ -237,6 +343,7 @@ public class Robot extends SampleRobot {
 				exampleRelay.set(Relay.Value.kOff);
 			}
 		}
+
 	}
 
 	/**

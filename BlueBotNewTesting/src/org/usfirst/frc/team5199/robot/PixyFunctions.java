@@ -17,7 +17,7 @@ public class PixyFunctions {
 	public static EncoderShooterFunctions encoderShooter;
 	public static double turnPower;
 	public static RobotDrive robot;
-	public static Jaguar turretMotor;
+	public static CANTalon turretMotor;
 
 	public PixyFunctions(Pixy pixy, UltrasonicFunctions ultra, EncoderDriveFunctions encoderF, RobotDrive driver) {
 		pixyProc = new PixyProcess(gearPixy);
@@ -27,7 +27,7 @@ public class PixyFunctions {
 //		turretMotor = new Jaguar(4);
 	}
 
-	public PixyFunctions(Pixy pixy,Jaguar turret) {
+	public PixyFunctions(Pixy pixy,CANTalon turret) {
 		pixyProcShooter = new PixyProcess(shooterPixy);
 		turretMotor = turret;
 	}
@@ -40,18 +40,18 @@ public class PixyFunctions {
 			if ((Math.abs(distanceOff) > RobotMap.pixyGearDataBuffer)) {
 				int sign = (distanceOff >= 160) ? -1 : 1;
 				SmartDashboard.putNumber("Pixy Turn Sign", sign);
-				turnPower = ((distanceOff / 20) * .06) * sign;
+				turnPower = ((distanceOff / 20) * .04) * sign;
 				SmartDashboard.putNumber("Turn value", turnPower);
-				if(Math.abs(turnPower) < .05){
-					turnPower = .05;
+				if(Math.abs(turnPower) < .03){
+					turnPower = .03;
 				}
-				if(Math.abs(turnPower) > .6){
-					turnPower = .6;
+				if(Math.abs(turnPower) > .15){
+					turnPower = .15;
 				}
-				robot.drive(0, turnPower, 1);
+				robot.drive(.4, turnPower, 1);
 				return false;
 			} else {
-				robot.drive(0, turnPower, 1);
+				robot.drive(.4, 0, 1);
 				return true;
 			}
 		}else{
@@ -87,7 +87,7 @@ public class PixyFunctions {
 		// if it is not aligned, turret centers on target
 		if (pixyProc.shooterData()[0] != -1) {
 			double distance = pixyProc.shooterData()[0];
-			double distanceOff = distance - 158;
+			double distanceOff = distance - 160;
 			//Alter subtraction value to change left or right alignment
 			SmartDashboard.putNumber("Distance Off", distanceOff);
 			if ((Math.abs(distanceOff) > RobotMap.pixyShooterDataBuffer)) {
@@ -96,8 +96,8 @@ public class PixyFunctions {
 				turnPower = ((Math.abs(distanceOff) / 450) * sign);
 				if(Math.abs(turnPower) > .4){
 					turnPower = .4*sign;
-				}else if(Math.abs(turnPower) < .075){
-					turnPower = .075*sign;
+				}else if(Math.abs(turnPower) < .06){
+					turnPower = .06*sign;
 				}
 //				}else if(turnPower < -.5){
 //					turnPower = -.5;

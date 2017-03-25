@@ -14,21 +14,23 @@ public class CircularAverageBuffer {
 		result =0; 
 		firstRun = true;
 		dataArray = new double[bufferSize];
-		for(int i =0; i<dataArray.length; i++){
+		for(int i =0; i< bufferSize; i++){
 			dataArray[i] = 0.0;
 		}
 	}
 	public double DataAverage(double data) {
 		//takes the data as a parameter and uses the circular buffer
 		//it then calculates and returns the average
-		sumBuffer += data - dataArray[counter];
-
-		dataArray[counter] = data;
-
 		if (counter== bufferSize) {
 			firstRun = false;
 			counter = 0;
 		}
+		
+		sumBuffer += data - dataArray[counter];
+
+		dataArray[counter] = data;
+		
+		
 
 		if (firstRun) {
 			result = sumBuffer / counter;

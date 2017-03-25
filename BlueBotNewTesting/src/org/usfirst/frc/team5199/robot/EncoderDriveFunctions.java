@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Spark;
 import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.TalonSRX;
+import edu.wpi.first.wpilibj.Victor;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class EncoderDriveFunctions {
@@ -15,36 +16,35 @@ public class EncoderDriveFunctions {
 	private static CANTalon encoder;
 	private static Encoder encoderDIORight, encoderDIOLeft, encoderDIOShooter;
 	private static RobotDrive robot;
-	private static Spark rightMotor, leftMotor;
+	private static Victor rightMotor, leftMotor;
 	private static CANTalon shooterMotor;
 	public static int distanceRemaining = 0;
 	private static boolean EnableDriveStraightCompensation = false;
 
-	public EncoderDriveFunctions(Spark rightMotor2, Spark leftMotor2, CANTalon shooter) {
-		rightMotor = rightMotor2;
-		leftMotor = leftMotor2;
-		shooterMotor = shooter;
+	public EncoderDriveFunctions(Victor right, Victor left) {
+		rightMotor = right;
+		leftMotor = left;
 		gyro = new ADXRS450_Gyro();
 		gyro.reset();
 		gyro.calibrate();
-		encoderDIORight = new Encoder(RobotMap.encoderRightDIOA, RobotMap.encoderRightDIOB, false,
-				Encoder.EncodingType.k4X);
-		encoderDIORight.reset();
-		encoderDIORight.setDistancePerPulse(RobotMap.inchesPerRotation);
-
-		encoderDIOLeft = new Encoder(RobotMap.encoderLeftDIOA, RobotMap.encoderLeftDIOB, false,
-				Encoder.EncodingType.k4X);
-		encoderDIOLeft.reset();
-		encoderDIOLeft.setDistancePerPulse(RobotMap.inchesPerRotation);
+//		encoderDIORight = new Encoder(RobotMap.encoderRightDIOA, RobotMap.encoderRightDIOB, false,
+//				Encoder.EncodingType.k4X);
+//		encoderDIORight.reset();
+//		encoderDIORight.setDistancePerPulse(RobotMap.inchesPerRotation);
+//
+//		encoderDIOLeft = new Encoder(RobotMap.encoderLeftDIOA, RobotMap.encoderLeftDIOB, false,
+//				Encoder.EncodingType.k4X);
+//		encoderDIOLeft.reset();
+//		encoderDIOLeft.setDistancePerPulse(RobotMap.inchesPerRotation);
 
 //		robot = new RobotDrive(rightMotor2, leftMotor);
 	}
 	//is called every time we use encoders
 	public static void initEncoders() {
-		encoderDIOLeft.reset();
-		encoderDIOLeft.setDistancePerPulse(RobotMap.inchesPerRotation);
-		encoderDIORight.reset();
-		encoderDIORight.setDistancePerPulse(RobotMap.inchesPerRotation);
+//		encoderDIOLeft.reset();
+//		encoderDIOLeft.setDistancePerPulse(RobotMap.inchesPerRotation);
+//		encoderDIORight.reset();
+//		encoderDIORight.setDistancePerPulse(RobotMap.inchesPerRotation);
 	}
 
 	public static void resetDrive() {
@@ -90,19 +90,19 @@ public class EncoderDriveFunctions {
 
 		if (Math.abs(rightDistance) < Math.abs(distanceForward) - (24)) {
 
-			rightMotor.set(-1 * .8 * sign * adjustR);
+			rightMotor.set(1 * .8 * sign * adjustR);
 		} else {
 			rightComplete = true;
 		}
 
 		if (Math.abs(leftDistance) < Math.abs(distanceForward) - (24)) {
-			leftMotor.set(1 * .8 * sign * adjustL);
+			leftMotor.set(-1 * .8 * sign * adjustL);
 		} else {
 			leftComplete = true;
 		}
 		if (rightComplete && leftComplete) {
 			rightMotor.set(.15);
-			leftMotor.set(-.15);
+			leftMotor.set(.15);
 			return true;
 		} else {
 			return false;
@@ -179,8 +179,9 @@ public class EncoderDriveFunctions {
 		double rightDistance, leftDistance;
 		double adjustL = 1, adjustR = 1;
 		int sign;
-		rightDistance = Math.abs(encoderDIORight.getDistance() / 120);
-		leftDistance  = Math.abs(encoderDIOLeft.getDistance() / 120);
+//		rightDistance = Math.abs(encoderDIORight.getDistance() / 120);
+//		leftDistance  = Math.abs(encoderDIOLeft.getDistance() / 120);
+		rightDistance =  leftDistance = 0;
 		double angle  = gyro.getAngle();
 		// SmartDashboard.putNumber("Gyro Angle",angle);
 		// SmartDashboard.putNumber("initial angle plus turn amount", Math.abs(initialAngle)+angleTurn);

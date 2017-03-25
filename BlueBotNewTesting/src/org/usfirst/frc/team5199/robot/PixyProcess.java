@@ -222,7 +222,7 @@ public class PixyProcess {
 //		return pixyValues[0]+((8*(pixyValues[2]/15)));	
 		double[] pixyValues  = averageData(2, false, gearPixy);
 
-		return pixyValues[0]+((8.5*(pixyValues[2]/8.5)));	
+		return pixyValues[0]+((8.5*(pixyValues[2]/9.5)));	
 	}
 	
 	public static double[] ShooterPixyData(){
@@ -354,6 +354,7 @@ public class PixyProcess {
 
 	}
 	
+	
 	public static double[] shooterAverageData(int mode, boolean displayResults) {
 		// mode = 0: return average x value
 		// mode = 1: return average x and average y
@@ -461,11 +462,11 @@ public class PixyProcess {
 			byte[] syncedBufferWithoutSync = new byte[14];
 			syncedBufferWithoutSync = shooterPixy.getVariableSizeBuffer(14);
 			SyncedLongBlock block = new SyncedLongBlock(syncedBufferWithoutSync);
+			SmartDashboard.putNumber("PIXY SHOOTER Y", block.getY(0));
 			shooterSumOfBufferX += block.getX(0) - shooterAverageDataValueArrayX[counter];
 			shooterAverageDataValueArrayX[counter] = block.getX(0);
 			counter++;
 			SmartDashboard.putNumber("Counter", counter);
-
 			if (counter == pixyBuffer) {
 				firstRun = false;
 				counter = 0;
